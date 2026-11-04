@@ -15,9 +15,9 @@ export class CameraManager {
       10000
     );
 
-    // Position camera close to water surface (50% sky, 50% lake composition)
-    this.instance.position.set(0, 6, 420);
-    this.instance.lookAt(0, 75, 0);
+    // First-person seated beachgoer perspective (seated on sand dunes looking across open sand and crowd at fireworks)
+    this.instance.position.set(0, 3.20, 424.0);
+    this.instance.lookAt(0, 68, 0);
 
     this.eventBus = eventBus || globalEventBus;
     this.trauma = 0.0;
@@ -34,7 +34,7 @@ export class CameraManager {
     // Camera Perspective Modes: 'free', 'boat', 'birds_eye'
     this.mode = 'free';
     this.sceneManager = null;
-    this.stageTarget = new THREE.Vector3(0, 75, 0);
+    this.stageTarget = new THREE.Vector3(0, 68, 0);
 
     // River Boat vantage settings
     this.boatOffset = new THREE.Vector3(0, 0, 0);
@@ -48,7 +48,7 @@ export class CameraManager {
     this.lastWasdDirection = new THREE.Vector2(1, 0);
 
     // Saved states for switching back to free mode
-    this.savedFreePosition = new THREE.Vector3(0, 6, 420);
+    this.savedFreePosition = new THREE.Vector3(0, 3.20, 424.0);
     this.savedFreeRotation = new THREE.Euler(0, 0, 0);
 
     // Third-person spectator vantage mode (triggered on viewer gift)
@@ -129,9 +129,9 @@ export class CameraManager {
   resetPosition() {
     this.cancelThirdPersonView();
     if (this.mode === 'free') {
-      this.instance.position.set(0, 6, 420);
-      this.instance.lookAt(0, 75, 0);
-      this.savedFreePosition.set(0, 6, 420);
+      this.instance.position.set(0, 3.20, 424.0);
+      this.instance.lookAt(0, 68, 0);
+      this.savedFreePosition.set(0, 3.20, 424.0);
       this.savedFreeRotation.copy(this.instance.rotation);
     } else if (this.mode === 'boat') {
       this.userBoatLocalPos.set(0, 0, 0);
@@ -317,7 +317,10 @@ export class CameraManager {
     this.trauma = Math.min(0.70, this.trauma + intensity);
   }
 
-  lockBroadcastView(position = new THREE.Vector3(0, 6.2, 421.5), target = new THREE.Vector3(0, 90, 0)) {
+  lockBroadcastView(
+    position = new THREE.Vector3(0, 3.20, 424.0),
+    target = new THREE.Vector3(0, 68, 0)
+  ) {
     this.isBroadcastLocked = true;
     this.broadcastPosition = position.clone();
     this.broadcastTarget = target.clone();

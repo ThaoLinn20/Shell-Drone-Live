@@ -120,10 +120,10 @@ const timelineEditor = enableLegacyEditor
   : null;
 
 if (!enableLegacyEditor) {
-  // Fixed broadcast camera rig: stationary tripod framing distant fireworks over viewing deck
+  // Immersive first-person seated spectator POV (seated on dunes looking across open sand and crowd at fireworks)
   cameraManager.lockBroadcastView(
-    new THREE.Vector3(0, 6.2, 421.5),
-    new THREE.Vector3(0, 90, 0)
+    new THREE.Vector3(0, 3.20, 424.0),
+    new THREE.Vector3(0, 68, 0)
   );
   inputSystem.isCameraLocked = true;
   movementSystem.locked = true;

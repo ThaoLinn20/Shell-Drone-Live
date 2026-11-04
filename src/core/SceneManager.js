@@ -11,6 +11,7 @@ import { RiverPropsManager } from '../environment/RiverPropsManager.js';
 import { ControlsBillboard } from '../environment/ControlsBillboard.js';
 import { WorkstationDesk } from '../environment/WorkstationDesk.js';
 import { ViewingDeck } from '../environment/ViewingDeck.js';
+import { BeachShoreline } from '../environment/BeachShoreline.js';
 import { SpectatorCrowd } from '../environment/SpectatorCrowd.js';
 
 export class SceneManager {
@@ -94,9 +95,10 @@ export class SceneManager {
     this.workstationDesk.group.visible = false;
     this.instance.add(this.workstationDesk.group);
 
-    // Initialize Lakeside Viewing Deck (Sân ngắm pháo hoa nhìn ra hồ)
-    this.viewingDeck = new ViewingDeck();
-    this.instance.add(this.viewingDeck.group);
+    // Initialize Seaside Beach Shoreline (Bãi cát ngắm pháo hoa ven biển kiểu Atami)
+    this.beachShoreline = new BeachShoreline();
+    this.instance.add(this.beachShoreline.group);
+    this.viewingDeck = this.beachShoreline; // Backward compatibility alias
 
     // Initialize 3D Spectator Crowd (Các nhân vật của người xem đứng ngắm pháo hoa)
     this.spectatorCrowd = new SpectatorCrowd({

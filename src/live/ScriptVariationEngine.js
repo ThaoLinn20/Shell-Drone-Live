@@ -298,14 +298,10 @@ export class ScriptVariationEngine {
     let count4 = 0;
     let count3 = 0;
 
-    if (totalShots % 4 === 0 && (totalShots % 3 !== 0 || Math.random() < 0.5)) {
+    if (totalShots % 4 === 0) {
       count4 = totalShots / 4;
     } else if (totalShots % 3 === 0) {
       count3 = totalShots / 3;
-      while (count3 >= 4 && Math.random() < 0.6) {
-        count3 -= 4;
-        count4 += 3;
-      }
     } else if (totalShots % 3 === 1) {
       count4 = 1;
       count3 = (totalShots - 4) / 3;

@@ -61,29 +61,59 @@ const HAIR_COLORS = [
 ];
 
 export const SYSTEM_SPEECH_PHRASES = [
-  'Phao hoa dep qua!',
-  'Qua nay mau ruc ro that!',
-  'Sang ruc ca goc troi!',
-  'Lap lanh nhu sao bang vay!',
-  'Dinh qua ca nha oi!',
-  'Ban tiep nua di nao!',
-  'Goc nay ngam tuyet voi luon!',
-  'Hieu ung lieu ru xuat sac!',
-  'Tuyet pham luon moi nguoi oi!'
+  'Pháo hoa đẹp quá!',
+  'Tim để bắn pháo!',
+  'Welcome!',
+  'Thả tim cho pháo hoa đi!',
+  'Nhớ Follow nha!',
+  'Không đánh nhau!',
+  'Đừng chen lấn xô đẩy!',
+  'Yêu màu hường ghét màu xám!',
+  'Cần bán mèo!',
+  'FWA Community!',
+  'Tải ngay FDShowStudio nào!',
+  'Hello!',
+  'Có giao thừa không!',
+  'Xin vía!',
+  'Oh no!',
+  'Trời!',
+  'Lạnh quá!',
+  'Ai trộm tiền t rồi!',
+  'Cháy quá bạn ơi!',
+  'Đẹp mê ly luôn!',
+  'Bắn tiếp đi idol!',
+  'Góc này view đỉnh chóp!',
+  'Team FWA Community điểm danh!',
+  'Tuyệt phẩm luôn!',
+  'Mãn nhãn thật sự!',
+  'Hiệu ứng đỉnh quá!',
+  'Cứu tôi, đẹp xỉu!',
+  'U là trời!',
+  'Bão tim đê anh em!',
+  'Chill phết nhờ!',
+  '10 điểm không có nhưng!',
+  'Tham gia FWA Community nào!',
 ];
 
 export class SpectatorCrowd {
   constructor(options = {}) {
     this.group = new THREE.Group();
-    this.position = options.position || new THREE.Vector3(0, 4.0, 415);
+    this.position = options.position || new THREE.Vector3(0, 0, 415);
     this.characters = [];
     this.viewerMap = new Map();
-    this.speechTimer = options.speechTimer || 4.0;
-    this.enableAutoSpeech = options.enableAutoSpeech !== undefined ? options.enableAutoSpeech : false;
+    this.speechTimer = options.speechTimer || 1.2;
+    this.speechInterval = options.speechInterval || 2.8;
+    this.enableAutoSpeech = options.enableAutoSpeech !== undefined ? options.enableAutoSpeech : true;
+    this.pendingReplyTimer = 0;
+    this.seatSwapCooldown = 50.0 + Math.random() * 30.0;
+    this.multiDepthSlots = [];
     this.slotCount = options.slotCount !== undefined ? options.slotCount : 10;
     this.eventBus = options.eventBus || null;
     this.focusedSpectator = null;
+    this.honoraryCharacters = {};
+    this.vipTableGroup = null;
     this.eventSubscriptions = [];
+    this.disposables = [];
 
     if (this.eventBus && typeof this.eventBus.on === 'function') {
       this.eventSubscriptions.push(
@@ -101,16 +131,25 @@ export class SpectatorCrowd {
     this.focusedSpectator = focusedChar || null;
 
     if (!focusedChar) {
+      if (this.vipTableGroup) {
+        this.vipTableGroup.visible = true;
+      }
       for (const char of this.characters) {
         char.group.visible = true;
         if (char.nameTag) {
-          char.nameTag.visible = true;
+          char.nameTag.visible = char.isHonorary
+            ? true
+            : (char.nameTagTimer > 0);
         }
         if (char.speechBubble) {
           char.speechBubble.visible = char.speechTimer > 0;
         }
       }
       return;
+    }
+
+    if (this.vipTableGroup) {
+      this.vipTableGroup.visible = Boolean(focusedChar.isHonorary);
     }
 
     for (const char of this.characters) {
@@ -146,82 +185,126 @@ export class SpectatorCrowd {
   initCrowd() {
     const slotCount = this.slotCount;
 
-    // Curated multi-depth spectator slots across 4 rows
-    // Row 1: Front Railing (closest to water edge & fireworks, Z ~ -13.8)
-    // Row 2: Mid-Front & Terrace Benches (Z ~ -11.0 to -9.0)
-    // Row 3: Mid Promenade Deck (Z ~ -7.6 to -7.2)
-    // Row 4: Foreground Depth Deck (Z ~ -5.0 to -4.8, closer to camera)
+    // Build the foreground VIP beach picnic lounge (luxury woven rug, floor cushions, low table & drinks)
+    this.createVipTableAndLounge();
+
+    // Curated multi-depth spectator slots across the sandy beach (Atami Hanabi style)
+    // Row 0: 3 VIP Foreground Honorary Leaders (Seated on luxury beach cushions at front-row picnic)
+    // Row 1: Front Shoreline Mats near water edge (Z ~ -13.6)
+    // Row 2: Mid-Beach Picnic Clusters (Z ~ -9.2)
+    // Row 3: Upper Beach Mats (Z ~ -7.2)
     const multiDepthSlots = [
-      // Row 1: Front Railing
-      {
-        x: -2.4,
-        z: -13.8,
-        holdingPhone: true
-      },
-      {
-        x: 2.2,
-        z: -13.8,
-        holdingPhone: false
-      },
+      // 3 VIP Foreground Honorary Leaders
+      // Slot 0: Top Gifter (Center Golden VIP Cushion)
       {
         x: 0.0,
-        z: -13.7,
+        z: -2.35,
+        baseY: 1.20,
+        isHonorary: true,
+        honoraryType: 'gifter',
+        defaultName: 'Anh Tuan VIP',
+        initialScore: 1000,
+        seated: true,
+        holdingPhone: false,
+        tagSideOffset: -0.55
+      },
+      // Slot 1: Top Liker (Left Ruby Heart VIP Cushion)
+      {
+        x: -1.65,
+        z: -2.45,
+        baseY: 1.16,
+        isHonorary: true,
+        honoraryType: 'liker',
+        defaultName: 'Linh Dan Top',
+        initialScore: 350,
+        seated: true,
+        holdingPhone: false,
+        tagSideOffset: -0.72
+      },
+      // Slot 2: Top Commenter (Right Cyber Sapphire VIP Cushion)
+      {
+        x: 1.65,
+        z: -2.45,
+        baseY: 1.20,
+        isHonorary: true,
+        honoraryType: 'commenter',
+        defaultName: 'Quoc Huy Chat',
+        initialScore: 45,
+        seated: true,
+        holdingPhone: false,
+        tagSideOffset: 0.72
+      },
+
+      // Audience Spectator Rows (Sitting on coastal picnic sheets & mats like in Atami photo)
+      // Row 1: Front Shoreline Mats near water edge
+      {
+        x: -2.3,
+        z: -13.6,
+        baseY: 0.08,
+        seated: true,
+        holdingPhone: true
+      },
+      {
+        x: 2.1,
+        z: -13.6,
+        baseY: 0.13,
+        seated: true,
+        holdingPhone: false
+      },
+      {
+        x: -0.2,
+        z: -13.4,
+        baseY: 0.09,
+        seated: true,
         holdingPhone: true
       },
 
-      // Row 2: Mid-Front & Terrace Benches
+      // Row 2: Mid-Beach Picnic Clusters
       {
-        x: -3.2,
-        z: -9.0,
+        x: -3.3,
+        z: -9.2,
+        baseY: 0.40,
         seated: true,
         holdingPhone: false
       },
       {
-        x: 3.2,
-        z: -9.0,
+        x: 3.3,
+        z: -9.2,
+        baseY: 0.55,
         seated: true,
-        holdingPhone: false
-      },
-      {
-        x: -1.5,
-        z: -10.8,
         holdingPhone: false
       },
 
-      // Row 3: Mid Promenade Deck
+      // Row 3: Upper Beach Mats
+      {
+        x: -1.6,
+        z: -7.2,
+        baseY: 0.72,
+        seated: true,
+        holdingPhone: false
+      },
       {
         x: 1.6,
-        z: -7.6,
+        z: -7.2,
+        baseY: 0.76,
+        seated: true,
         holdingPhone: true
-      },
-      {
-        x: -2.0,
-        z: -7.4,
-        holdingPhone: false
-      },
-
-      // Row 4: Foreground Depth Deck
-      {
-        x: -1.1,
-        z: -5.0,
-        holdingPhone: true
-      },
-      {
-        x: 1.2,
-        z: -4.8,
-        holdingPhone: false
       },
 
       // Extended Reserve Slots (for slotCount > 10)
       {
-        x: -0.8,
+        x: 0.8,
         z: -13.6,
-        holdingPhone: true
+        baseY: 0.10,
+        seated: true,
+        holdingPhone: false
       },
       {
-        x: 0.6,
+        x: -0.6,
         z: -9.2,
-        holdingPhone: false
+        baseY: 0.42,
+        seated: true,
+        holdingPhone: true
       }
     ];
 
@@ -234,6 +317,8 @@ export class SpectatorCrowd {
       });
     }
 
+    this.multiDepthSlots = allSlots;
+
     for (let i = 0; i < slotCount; i++) {
       const isFemale = i % 2 === 1;
       const gender = isFemale ? 'female' : 'male';
@@ -245,27 +330,176 @@ export class SpectatorCrowd {
       const hairColor = HAIR_COLORS[i % HAIR_COLORS.length];
 
       const slot = allSlots[i];
-      const x = slot.x + (Math.random() - 0.5) * 0.15;
-      const z = slot.z + (Math.random() - 0.5) * 0.15;
+      const charName = slot.defaultName || name;
+      const x = slot.x + (slot.isHonorary ? 0 : (Math.random() - 0.5) * 0.15);
+      const z = slot.z + (slot.isHonorary ? 0 : (Math.random() - 0.5) * 0.15);
 
       const char = this.createCharacter(
         x,
         z,
         color,
         hairColor,
-        name,
+        charName,
         gender,
         slot,
         i
       );
 
-      if (slot.seated) {
-        this.sitDown(char);
-      }
+      // All spectators default to seated posture enjoying the beach fireworks
+      this.sitDown(char, true);
       this.characters.push(char);
       this.group.add(char.group);
-      this.viewerMap.set(name.toLowerCase(), i);
+      this.viewerMap.set(charName.toLowerCase(), i);
     }
+  }
+
+  createVipTableAndLounge() {
+    const loungeGroup = new THREE.Group();
+    loungeGroup.name = 'vipLoungeGroup';
+    loungeGroup.position.set(0, 1.20, 0);
+
+    // 1. Luxury Glamping Beach Mat / Woven Boho Rug
+    const rugGeo = new THREE.PlaneGeometry(4.4, 2.4);
+    const rugMat = new THREE.MeshStandardMaterial({
+      color: 0x854d0e, // Rich warm amber-terracotta woven textile
+      roughness: 0.85,
+      metalness: 0.05
+    });
+    const rug = new THREE.Mesh(rugGeo, rugMat);
+    rug.rotation.x = -Math.PI * 0.5;
+    rug.position.set(0, 0.015, -2.7);
+    loungeGroup.add(rug);
+
+    // Decorative Gold Border Fringe around VIP Rug
+    const fringeGeo = new THREE.PlaneGeometry(4.46, 2.46);
+    const fringeMat = new THREE.MeshBasicMaterial({
+      color: 0xfacc15,
+      transparent: true,
+      opacity: 0.65
+    });
+    const fringe = new THREE.Mesh(fringeGeo, fringeMat);
+    fringe.rotation.x = -Math.PI * 0.5;
+    fringe.position.set(0, 0.01, -2.7);
+    loungeGroup.add(fringe);
+
+    // 2. Low Artisanal Beach Picnic Tray Table (Bàn trà bãi biển chân thấp)
+    // Tabletop at height 0.32, spans across X = -1.9 to X = +1.9
+    const tableTopGeo = new THREE.BoxGeometry(3.8, 0.04, 0.52);
+    const tableTopMat = new THREE.MeshStandardMaterial({
+      color: 0x3f2e22, // Weathered rich coastal teak wood
+      roughness: 0.55,
+      metalness: 0.15
+    });
+    const tableTop = new THREE.Mesh(tableTopGeo, tableTopMat);
+    tableTop.position.set(0, 0.30, -3.05);
+    loungeGroup.add(tableTop);
+
+    // Gold trim edge on low table
+    const trimGeo = new THREE.BoxGeometry(3.84, 0.015, 0.56);
+    const trimMat = new THREE.MeshStandardMaterial({
+      color: 0xfacc15,
+      metalness: 0.85,
+      roughness: 0.25
+    });
+    const trim = new THREE.Mesh(trimGeo, trimMat);
+    trim.position.set(0, 0.315, -3.05);
+    loungeGroup.add(trim);
+
+    // Warm ambient LED underglow beneath low table
+    const ledGeo = new THREE.BoxGeometry(3.76, 0.012, 0.02);
+    const ledMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+    const ledStrip = new THREE.Mesh(ledGeo, ledMat);
+    ledStrip.position.set(0, 0.28, -2.8);
+    loungeGroup.add(ledStrip);
+
+    // Low wooden block feet for picnic tray table
+    const footGeo = new THREE.BoxGeometry(0.36, 0.28, 0.44);
+    const footMat = new THREE.MeshStandardMaterial({
+      color: 0x2e1c12,
+      roughness: 0.7
+    });
+    const footPositionsX = [-1.3, 1.3];
+    for (const fx of footPositionsX) {
+      const foot = new THREE.Mesh(footGeo, footMat);
+      foot.position.set(fx, 0.14, -3.05);
+      loungeGroup.add(foot);
+    }
+
+    // Tabletop Centerpiece: Ambient Japanese Festival Candle Lantern
+    const lanternBaseGeo = new THREE.CylinderGeometry(0.08, 0.09, 0.03, 16);
+    const lanternBaseMat = new THREE.MeshStandardMaterial({
+      color: 0xfacc15,
+      metalness: 0.85,
+      roughness: 0.3
+    });
+    const lanternBase = new THREE.Mesh(lanternBaseGeo, lanternBaseMat);
+    lanternBase.position.set(0, 0.335, -3.05);
+    loungeGroup.add(lanternBase);
+
+    const candleGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.10, 12);
+    const candleMat = new THREE.MeshBasicMaterial({ color: 0xfde047 });
+    const candle = new THREE.Mesh(candleGeo, candleMat);
+    candle.position.set(0, 0.39, -3.05);
+    loungeGroup.add(candle);
+
+    // 3 VIP Drink Glasses on Table in front of each seat
+    const drinkConfigs = [
+      { x: -1.65, color: 0xf43f5e }, // Liker Ruby Cocktail
+      { x: 0.0, color: 0xfacc15 },   // Gifter Golden Champagne
+      { x: 1.65, color: 0x38bdf8 }   // Commenter Cyan Beverage
+    ];
+
+    const glassGeo = new THREE.CylinderGeometry(0.035, 0.025, 0.09, 10);
+    for (const d of drinkConfigs) {
+      const glassMat = new THREE.MeshStandardMaterial({
+        color: d.color,
+        roughness: 0.1,
+        metalness: 0.2,
+        transparent: true,
+        opacity: 0.85
+      });
+      const glass = new THREE.Mesh(glassGeo, glassMat);
+      glass.position.set(d.x, 0.365, -2.95);
+      loungeGroup.add(glass);
+    }
+
+    // 3. 3 Luxury Beach Floor Cushions (Zafuton / Lounge Cushions)
+    const cushionConfigs = [
+      { x: -1.65, z: -2.45, rimColor: 0xf43f5e }, // Liker
+      { x: 0.0, z: -2.35, rimColor: 0xfde047 },   // Gifter
+      { x: 1.65, z: -2.45, rimColor: 0x38bdf8 }   // Commenter
+    ];
+
+    const cushionGeo = new THREE.BoxGeometry(0.56, 0.12, 0.52);
+    const cushionMat = new THREE.MeshStandardMaterial({
+      color: 0x1e293b, // Dark charcoal weather-resistant fabric
+      roughness: 0.8,
+      metalness: 0.1
+    });
+
+    const rimGeo = new THREE.TorusGeometry(0.52, 0.016, 8, 24);
+
+    for (const cfg of cushionConfigs) {
+      const seatGroup = new THREE.Group();
+      seatGroup.position.set(cfg.x, 0, cfg.z);
+
+      // Floor illuminated LED rim on sand
+      const rimMat = new THREE.MeshBasicMaterial({ color: cfg.rimColor });
+      const rim = new THREE.Mesh(rimGeo, rimMat);
+      rim.rotation.x = Math.PI * 0.5;
+      rim.position.set(0, 0.01, 0);
+      seatGroup.add(rim);
+
+      // Floor cushion
+      const cushion = new THREE.Mesh(cushionGeo, cushionMat);
+      cushion.position.set(0, 0.06, 0);
+      seatGroup.add(cushion);
+
+      loungeGroup.add(seatGroup);
+    }
+
+    this.vipTableGroup = loungeGroup;
+    this.group.add(this.vipTableGroup);
   }
 
   createCharacter(
@@ -279,13 +513,21 @@ export class SpectatorCrowd {
     index = 0
   ) {
     const isFemale = gender === 'female';
+    const isHonorary = Boolean(slotConfig.isHonorary);
+    const honoraryType = slotConfig.honoraryType || null;
+    const baseY = Number(slotConfig.baseY) || 0;
+
     const charGroup = new THREE.Group();
-    charGroup.position.set(x, 0, z);
+    charGroup.position.set(x, baseY, z);
     charGroup.rotation.y = Math.PI;
 
     // Subtle scale variation for realistic height and physique differences
-    const heightScale = 0.94 + ((index * 7) % 15) * 0.01;
-    const widthScale = 0.95 + ((index * 5) % 12) * 0.01;
+    const heightScale = isHonorary
+      ? 1.05
+      : 0.94 + ((index * 7) % 15) * 0.01;
+    const widthScale = isHonorary
+      ? 1.04
+      : 0.95 + ((index * 5) % 12) * 0.01;
     charGroup.scale.set(widthScale, heightScale, widthScale);
 
     // 1. Legs, Shoes, and Skirt/Pants
@@ -367,6 +609,19 @@ export class SpectatorCrowd {
     const torso = new THREE.Mesh(torsoGeo, torsoMat);
     torso.position.set(0, 1.2, 0);
     charGroup.add(torso);
+
+    // 2b. Stylish Back-of-shirt Jersey / Happi Decal showing username & honorary title
+    const shirtPlate = this.createShirtPlateMesh(
+      torsoW,
+      torsoH,
+      torsoD,
+      name,
+      isHonorary,
+      honoraryType,
+      index,
+      slotConfig.initialScore || 0
+    );
+    torso.add(shirtPlate);
 
     // Waist belt with metallic buckle
     const beltGeo = new THREE.BoxGeometry(
@@ -545,6 +800,19 @@ export class SpectatorCrowd {
       headGroup.add(glasses);
     }
 
+    // Golden VIP Crown for Top Gifter
+    if (isHonorary && honoraryType === 'gifter') {
+      const crownMat = new THREE.MeshStandardMaterial({
+        color: 0xfacc15,
+        metalness: 0.9,
+        roughness: 0.2
+      });
+      const crownGeo = new THREE.CylinderGeometry(0.18, 0.15, 0.08, 5);
+      const crown = new THREE.Mesh(crownGeo, crownMat);
+      crown.position.set(0, 0.20, 0);
+      headGroup.add(crown);
+    }
+
     headGroup.rotation.x = -0.38 + (Math.random() - 0.5) * 0.10;
     charGroup.add(headGroup);
 
@@ -607,9 +875,28 @@ export class SpectatorCrowd {
 
     charGroup.add(rightArmGroup);
 
-    // 5. 3D Floating Name Tag
-    const nameTag = this.createNameTagSprite(name, isFemale);
-    nameTag.position.set(0, 2.25, 0);
+    // Calculate lateral offset beside the head: left side for left characters, right side for right/center
+    const tagSideOffset = slotConfig.tagSideOffset !== undefined
+      ? slotConfig.tagSideOffset
+      : (x < -0.5 ? -0.72 : 0.72);
+
+    // 5. 3D Name Tag or Prestige Honorary Badge (positioned beside the head at eye level)
+    let nameTag = null;
+    if (isHonorary) {
+      nameTag = this.createHonoraryBadgeSprite(
+        name,
+        honoraryType,
+        slotConfig.initialScore || 0
+      );
+      nameTag.position.set(tagSideOffset, 1.15, 0);
+      nameTag.scale.set(0.95, 0.35, 1.0);
+      nameTag.visible = true;
+    } else {
+      nameTag = this.createNameTagSprite(name, isFemale);
+      nameTag.position.set(tagSideOffset, 1.10, 0);
+      nameTag.scale.set(0.85, 0.24, 1.0);
+      nameTag.visible = false;
+    }
     charGroup.add(nameTag);
 
     // 6. 3D Speech Bubble Sprite
@@ -618,9 +905,14 @@ export class SpectatorCrowd {
     speechBubble.scale.set(0.001, 0.001, 0.001);
     charGroup.add(speechBubble);
 
-    return {
+    const char = {
       group: charGroup,
       gender: gender,
+      isHonorary: isHonorary,
+      honoraryType: honoraryType,
+      honoraryScore: slotConfig.initialScore || 0,
+      slotIndex: index,
+      tagSideOffset: tagSideOffset,
       holdingPhone: holdingPhone,
       headGroup: headGroup,
       leftArmGroup: leftArmGroup,
@@ -629,20 +921,274 @@ export class SpectatorCrowd {
       rightLegGroup: rightLegGroup,
       torso: torso,
       skirt: skirt,
+      shirtPlate: shirtPlate,
       nameTag: nameTag,
+      nameTagTimer: 0,
       speechBubble: speechBubble,
       name: name,
-      baseY: 0,
+      baseY: baseY,
       baseHeadRotX: headGroup.rotation.x,
-      state: 'watching',
-      stateTimer: 5 + Math.random() * 8,
+      state: 'sitting',
+      stateTimer: 999999,
+      currentSlotIndex: index,
       cheerTimer: 0,
       speechTimer: 0,
-      targetPos: new THREE.Vector3(x, 0, z),
+      targetPos: new THREE.Vector3(x, baseY, z),
       walkSpeed: isFemale ? 1.6 : 1.9,
       walkPhase: 0,
       phaseOffset: Math.random() * Math.PI * 2
     };
+
+    if (isHonorary && honoraryType) {
+      this.honoraryCharacters[honoraryType] = char;
+    }
+
+    return char;
+  }
+
+  createShirtPlateMesh(
+    torsoW,
+    torsoH,
+    torsoD,
+    name,
+    isHonorary = false,
+    honoraryType = null,
+    slotIndex = 0,
+    score = 0
+  ) {
+    if (typeof document === 'undefined') {
+      const dummyGeo = new THREE.PlaneGeometry(0.1, 0.1);
+      const dummyMat = new THREE.MeshBasicMaterial({ transparent: true });
+      const mesh = new THREE.Mesh(dummyGeo, dummyMat);
+      mesh.userData = { canvas: null, ctx: null, texture: null };
+      return mesh;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 600;
+    const ctx = canvas.getContext('2d');
+
+    this.drawShirtPlateCanvas(
+      ctx,
+      canvas.width,
+      canvas.height,
+      name,
+      isHonorary,
+      honoraryType,
+      slotIndex,
+      score
+    );
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+    if (this.disposables) {
+      this.disposables.push(texture);
+    }
+
+    const plateGeo = new THREE.PlaneGeometry(
+      torsoW * 0.88,
+      torsoH * 0.74
+    );
+    if (this.disposables) {
+      this.disposables.push(plateGeo);
+    }
+
+    const plateMat = new THREE.MeshStandardMaterial({
+      map: texture,
+      transparent: true,
+      roughness: 0.65,
+      metalness: 0.15,
+      side: THREE.DoubleSide,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -1
+    });
+    if (this.disposables) {
+      this.disposables.push(plateMat);
+    }
+
+    const plateMesh = new THREE.Mesh(plateGeo, plateMat);
+    // Positioned flush on the back face of the torso facing camera
+    plateMesh.position.set(0, 0.03, -torsoD * 0.5 - 0.008);
+    plateMesh.rotation.y = Math.PI;
+
+    plateMesh.userData = {
+      canvas,
+      ctx,
+      texture,
+      name,
+      isHonorary,
+      honoraryType,
+      slotIndex,
+      score
+    };
+
+    return plateMesh;
+  }
+
+  drawShirtPlateCanvas(
+    ctx,
+    width,
+    height,
+    name,
+    isHonorary = false,
+    honoraryType = null,
+    slotIndex = 0,
+    score = 0
+  ) {
+    ctx.clearRect(0, 0, width, height);
+
+    const pad = 14;
+    const r = 26;
+
+    let borderColor = '#94a3b8';
+    let bannerBg = '#334155';
+    let bannerTextColor = '#f8fafc';
+    let topTitle = 'HANABI FESTIVAL';
+    let bottomSubtitle = '#' + String(slotIndex + 1).padStart(2, '0');
+    let emblemColor = '#38bdf8';
+
+    if (isHonorary) {
+      if (honoraryType === 'gifter') {
+        borderColor = '#f59e0b';
+        bannerBg = '#b45309';
+        bannerTextColor = '#fffbeb';
+        topTitle = 'TOP 1 GIFTER';
+        bottomSubtitle = Number(score).toLocaleString() + ' KC';
+        emblemColor = '#fbbf24';
+      } else if (honoraryType === 'liker') {
+        borderColor = '#f43f5e';
+        bannerBg = '#be123c';
+        bannerTextColor = '#fff1f2';
+        topTitle = 'TOP 1 LIKER';
+        bottomSubtitle = Number(score).toLocaleString() + ' TIM';
+        emblemColor = '#fb7185';
+      } else if (honoraryType === 'commenter') {
+        borderColor = '#0ea5e9';
+        bannerBg = '#0369a1';
+        bannerTextColor = '#f0f9ff';
+        topTitle = 'TOP 1 CHAT';
+        bottomSubtitle = Number(score).toLocaleString() + ' CHAT';
+        emblemColor = '#38bdf8';
+      }
+    }
+
+    ctx.save();
+
+    // 1. Jersey back patch background
+    ctx.beginPath();
+    ctx.roundRect(pad, pad, width - pad * 2, height - pad * 2, r);
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+    ctx.fill();
+
+    // Metallic outer border
+    ctx.lineWidth = 8;
+    ctx.strokeStyle = borderColor;
+    ctx.stroke();
+
+    // Inner glowing rim
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = isHonorary
+      ? 'rgba(255, 255, 255, 0.45)'
+      : 'rgba(255, 255, 255, 0.18)';
+    ctx.stroke();
+
+    // 2. Top Title Ribbon
+    const bannerH = 74;
+    ctx.beginPath();
+    ctx.roundRect(
+      pad + 8,
+      pad + 8,
+      width - pad * 2 - 16,
+      bannerH,
+      [r - 6, r - 6, 10, 10]
+    );
+    ctx.fillStyle = bannerBg;
+    ctx.fill();
+
+    ctx.fillStyle = bannerTextColor;
+    ctx.font = 'bold 30px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(topTitle, width * 0.5, pad + 8 + bannerH * 0.5);
+
+    // 3. Center FWA Community Branding
+    // Line 1: FWA (Athletic, high-impact block typography)
+    const fwaY = 240;
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 114px "Arial Black", Impact, system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+    ctx.shadowBlur = 14;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 4;
+    ctx.fillText('FWA', width * 0.5, fwaY);
+
+    // Decorative metallic divider bar
+    const sepW = 190;
+    const sepY = 308;
+    ctx.beginPath();
+    ctx.moveTo((width - sepW) * 0.5, sepY);
+    ctx.lineTo((width + sepW) * 0.5, sepY);
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = emblemColor;
+    ctx.stroke();
+
+    // Line 2: Community (Stylized subtitle font)
+    const commY = 360;
+    ctx.fillStyle = isHonorary ? emblemColor : '#94a3b8';
+    ctx.font = 'bold 44px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.shadowBlur = 8;
+    ctx.shadowOffsetY = 2;
+    ctx.fillText('Community', width * 0.5, commY);
+    ctx.shadowColor = 'transparent';
+
+    // 4. Bottom Subtitle / Score / Seat Ribbon
+    const bottomH = 68;
+    const bottomY = height - pad - 12 - bottomH;
+    ctx.beginPath();
+    ctx.roundRect(
+      pad + 18,
+      bottomY,
+      width - pad * 2 - 36,
+      bottomH,
+      16
+    );
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.88)';
+    ctx.fill();
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = borderColor;
+    ctx.stroke();
+
+    ctx.fillStyle = borderColor;
+    ctx.font = 'bold 28px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(bottomSubtitle, width * 0.5, bottomY + bottomH * 0.5);
+
+    ctx.restore();
+  }
+
+  updateShirtPlate(char, name, honoraryType = null, score = 0) {
+    const plate = char.shirtPlate;
+    if (plate && plate.userData && plate.userData.ctx) {
+      const { ctx, canvas, texture, slotIndex, isHonorary } = plate.userData;
+      this.drawShirtPlateCanvas(
+        ctx,
+        canvas.width,
+        canvas.height,
+        name,
+        isHonorary,
+        honoraryType || char.honoraryType,
+        slotIndex,
+        score || char.honoraryScore
+      );
+      texture.needsUpdate = true;
+    }
   }
 
   createNameTagSprite(text, isFemale = false) {
@@ -677,7 +1223,8 @@ export class SpectatorCrowd {
     });
 
     const sprite = new THREE.Sprite(spriteMat);
-    sprite.scale.set(2.4, 0.6, 1.0);
+    // Sleek and compact to prevent screen occlusion
+    sprite.scale.set(0.95, 0.25, 1.0);
     sprite.userData = { canvas, ctx, texture, isFemale };
     return sprite;
   }
@@ -713,24 +1260,24 @@ export class SpectatorCrowd {
     ctx.clearRect(0, 0, width, height);
 
     if (isCelebrating) {
-      ctx.fillStyle = 'rgba(245, 158, 11, 0.95)';
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.92)';
       ctx.strokeStyle = '#fde047';
     } else if (isFemale) {
-      ctx.fillStyle = 'rgba(136, 19, 55, 0.90)';
+      ctx.fillStyle = 'rgba(28, 15, 24, 0.88)';
       ctx.strokeStyle = '#f472b6';
     } else {
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
       ctx.strokeStyle = '#38bdf8';
     }
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 3;
 
     ctx.beginPath();
-    ctx.roundRect(10, 10, width - 20, height - 20, 28);
+    ctx.roundRect(10, 10, width - 20, height - 20, 24);
     ctx.fill();
     ctx.stroke();
 
     ctx.fillStyle = isCelebrating ? '#000000' : '#ffffff';
-    ctx.font = 'bold 38px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = 'bold 34px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(text, width * 0.5, height * 0.5);
@@ -815,8 +1362,23 @@ export class SpectatorCrowd {
 
   updateNameTag(char, newName, isCelebrating = false) {
     char.name = newName;
+    this.updateShirtPlate(
+      char,
+      newName,
+      char.honoraryType,
+      char.honoraryScore
+    );
     const tag = char.nameTag;
     if (tag && tag.userData.ctx) {
+      if (char.isHonorary) {
+        this.updateHonoraryBadge(
+          char,
+          newName,
+          char.honoraryType,
+          char.honoraryScore
+        );
+        return;
+      }
       const { ctx, canvas, texture, isFemale } = tag.userData;
       this.drawNameTagCanvas(
         ctx,
@@ -825,6 +1387,196 @@ export class SpectatorCrowd {
         newName,
         isCelebrating,
         isFemale
+      );
+      texture.needsUpdate = true;
+    }
+  }
+
+  createHonoraryBadgeSprite(name, type, score = 0) {
+    if (typeof document === 'undefined') {
+      const dummyMat = new THREE.SpriteMaterial({ transparent: true });
+      const sprite = new THREE.Sprite(dummyMat);
+      sprite.userData = {
+        canvas: null,
+        ctx: null,
+        texture: null,
+        type,
+        score
+      };
+      return sprite;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 180;
+    const ctx = canvas.getContext('2d');
+
+    this.drawHonoraryBadgeCanvas(
+      ctx,
+      canvas.width,
+      canvas.height,
+      name,
+      type,
+      score
+    );
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.minFilter = THREE.LinearFilter;
+
+    const spriteMat = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthTest: true
+    });
+
+    const sprite = new THREE.Sprite(spriteMat);
+    // Well-proportioned VIP badge that stays in foreground without overlapping or blocking fireworks
+    sprite.scale.set(1.15, 0.40, 1.0);
+    sprite.userData = {
+      canvas,
+      ctx,
+      texture,
+      type,
+      score
+    };
+    return sprite;
+  }
+
+  drawHonoraryBadgeCanvas(ctx, width, height, name, type, score = 0) {
+    ctx.clearRect(0, 0, width, height);
+
+    let bgStyle = 'rgba(26, 20, 10, 0.94)';
+    let borderColor = '#fbbf24';
+    let glowColor = 'rgba(251, 191, 36, 0.65)';
+    let titleBg = '#f59e0b';
+    let titleText = 'TOP 1 GIFTER';
+    let nameColor = '#fef08a';
+    let scoreText = `${Number(score).toLocaleString()} KC`;
+    let scoreColor = '#fbbf24';
+
+    if (type === 'liker') {
+      bgStyle = 'rgba(32, 10, 18, 0.94)';
+      borderColor = '#f43f5e';
+      glowColor = 'rgba(244, 63, 94, 0.65)';
+      titleBg = '#f43f5e';
+      titleText = 'TOP 1 LIKER';
+      nameColor = '#ffe4e6';
+      scoreText = `${Number(score).toLocaleString()} TIM`;
+      scoreColor = '#fb7185';
+    } else if (type === 'commenter') {
+      bgStyle = 'rgba(8, 22, 38, 0.94)';
+      borderColor = '#38bdf8';
+      glowColor = 'rgba(56, 189, 248, 0.65)';
+      titleBg = '#0284c7';
+      titleText = 'TOP 1 CHAT';
+      nameColor = '#e0f2fe';
+      scoreText = `${Number(score).toLocaleString()} BINH LUAN`;
+      scoreColor = '#38bdf8';
+    }
+
+    // 1. Outer glowing prestige frame with rounded corners
+    ctx.save();
+    ctx.shadowColor = glowColor;
+    ctx.shadowBlur = 14;
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 4;
+    ctx.fillStyle = bgStyle;
+    ctx.beginPath();
+    ctx.roundRect(10, 10, width - 20, height - 20, 24);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+
+    // 2. Inner fine ornamental border
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(16, 16, width - 32, height - 32, 18);
+    ctx.stroke();
+
+    // 3. Top Title Ribbon Banner
+    const ribbonW = 200;
+    const ribbonH = 30;
+    const ribbonX = (width - ribbonW) * 0.5;
+    const ribbonY = 12;
+    ctx.fillStyle = titleBg;
+    ctx.beginPath();
+    ctx.roundRect(ribbonX, ribbonY, ribbonW, ribbonH, 10);
+    ctx.fill();
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 18px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(titleText, width * 0.5, ribbonY + ribbonH * 0.5);
+
+    // 4. Middle User Name
+    ctx.fillStyle = nameColor;
+    ctx.font = 'bold 34px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    let displayName = name;
+    if (displayName.length > 20) {
+      displayName = displayName.substring(0, 18) + '...';
+    }
+    ctx.fillText(displayName, width * 0.5, 84);
+
+    // 5. Bottom Score Pill
+    const pillW = 220;
+    const pillH = 32;
+    const pillX = (width - pillW) * 0.5;
+    const pillY = 126;
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+    ctx.strokeStyle = borderColor;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.roundRect(pillX, pillY, pillW, pillH, 12);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = scoreColor;
+    ctx.font = 'bold 19px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(scoreText, width * 0.5, pillY + pillH * 0.5);
+  }
+
+  updateHonoraryLeader(category, user, score) {
+    const char = this.honoraryCharacters[category];
+    if (!char) {
+      return;
+    }
+
+    const cleanName = user?.nickname || user?.name || char.name;
+    char.name = cleanName;
+    char.honoraryScore = score;
+
+    this.updateHonoraryBadge(
+      char,
+      cleanName,
+      category,
+      score
+    );
+
+    char.state = 'cheering';
+    char.cheerTimer = 4.0;
+    this.standUp(char);
+
+    this.viewerMap.set(cleanName.toLowerCase(), char.slotIndex);
+  }
+
+  updateHonoraryBadge(char, name, type, score) {
+    this.updateShirtPlate(char, name, type, score);
+    const badge = char.nameTag;
+    if (badge && badge.userData.ctx) {
+      const { ctx, canvas, texture } = badge.userData;
+      this.drawHonoraryBadgeCanvas(
+        ctx,
+        canvas.width,
+        canvas.height,
+        name,
+        type,
+        score
       );
       texture.needsUpdate = true;
     }
@@ -880,13 +1632,19 @@ export class SpectatorCrowd {
     if (char) {
       char.state = 'cheering';
       char.cheerTimer = 3.5;
+      if (!char.isHonorary) {
+        char.nameTagTimer = 6.0;
+        if (char.nameTag) {
+          char.nameTag.visible = true;
+        }
+      }
       this.standUp(char);
       this.updateNameTag(char, cleanName, true);
 
       if (data.comment) {
         this.showSpeech(char, data.comment, 6.0, cleanName);
       } else if (data.giftName) {
-        this.showSpeech(char, 'Tang ' + data.giftName + '!', 4.5, cleanName);
+        this.showSpeech(char, 'Tặng ' + data.giftName + '!', 4.5, cleanName);
       }
 
       // If action is a gift, notify camera to focus in third-person view behind this spectator
@@ -927,66 +1685,173 @@ export class SpectatorCrowd {
       char.rightArmGroup.rotation.set(0, 0, 0);
     }
 
-    char.nameTag.position.y = 2.25;
-    char.speechBubble.position.y = 3.25;
+    const sideX = char.tagSideOffset !== undefined ? char.tagSideOffset : 0.72;
+    char.nameTag.position.set(sideX, char.isHonorary ? 1.72 : 1.68, 0);
+    char.nameTag.scale.set(char.isHonorary ? 0.95 : 0.85, char.isHonorary ? 0.35 : 0.24, 1.0);
+    char.speechBubble.position.set(0, 3.25, 0);
     char.group.position.y = char.baseY;
   }
 
-  sitDown(char) {
+  sitDown(char, force = false) {
+    if (char.isHonorary && !force) {
+      return;
+    }
     const isFemale = char.gender === 'female';
     const legSpacing = isFemale ? 0.11 : 0.15;
     char.state = 'sitting';
-    char.stateTimer = 10 + Math.random() * 14;
+    char.stateTimer = 999999;
 
-    char.leftLegGroup.rotation.x = -Math.PI * 0.45;
-    char.rightLegGroup.rotation.x = -Math.PI * 0.45;
-    char.leftLegGroup.position.set(-legSpacing, 0.38, 0.1);
-    char.rightLegGroup.position.set(legSpacing, 0.38, 0.1);
+    const sideX = char.tagSideOffset !== undefined ? char.tagSideOffset : 0.72;
 
-    char.torso.position.y = 0.58;
-    if (char.skirt) {
-      char.skirt.position.y = 0.36;
-    }
-    char.headGroup.position.y = 1.12;
-    char.headGroup.rotation.x = -0.45;
-    char.leftArmGroup.position.y = 0.86;
-    char.rightArmGroup.position.y = 0.86;
-    char.leftArmGroup.rotation.x = -0.2;
+    if (char.isHonorary) {
+      // Seated on luxury VIP beach floor cushion at front-row picnic
+      char.leftLegGroup.rotation.x = -Math.PI * 0.48;
+      char.rightLegGroup.rotation.x = -Math.PI * 0.48;
+      char.leftLegGroup.position.set(-legSpacing, 0.18, 0.10);
+      char.rightLegGroup.position.set(legSpacing, 0.18, 0.10);
 
-    if (char.holdingPhone) {
-      char.rightArmGroup.rotation.set(-0.8, -0.15, -0.2);
+      char.torso.position.y = 0.62;
+      if (char.skirt) {
+        char.skirt.position.y = 0.40;
+      }
+      char.headGroup.position.y = 1.18;
+      char.headGroup.rotation.x = -0.42; // Gazing up towards fireworks over the sea
+      char.leftArmGroup.position.y = 0.88;
+      char.rightArmGroup.position.y = 0.88;
+      // Resting arms naturally forward towards the low picnic tray table
+      char.leftArmGroup.rotation.set(-0.35, 0.10, 0);
+      char.rightArmGroup.rotation.set(-0.35, -0.10, 0);
+
+      // Name badge positioned beside the head at eye level (leaving sky 100% clear)
+      char.nameTag.position.set(sideX, 1.15, 0);
+      char.nameTag.scale.set(0.95, 0.35, 1.0);
+      char.speechBubble.position.set(0, 2.30, 0);
     } else {
-      char.rightArmGroup.rotation.x = -0.2;
-    }
+      // Seated casually on coastal Hanabi leisure sheets & sand mats
+      char.leftLegGroup.rotation.x = -Math.PI * 0.48;
+      char.rightLegGroup.rotation.x = -Math.PI * 0.48;
+      char.leftLegGroup.position.set(-legSpacing, 0.16, 0.08);
+      char.rightLegGroup.position.set(legSpacing, 0.16, 0.08);
 
-    char.nameTag.position.y = 1.55;
-    char.speechBubble.position.y = 2.45;
+      char.torso.position.y = 0.54;
+      if (char.skirt) {
+        char.skirt.position.y = 0.34;
+      }
+      char.headGroup.position.y = 1.10;
+      char.headGroup.rotation.x = -0.46; // Gazing up towards sky and fireworks
+      char.leftArmGroup.position.y = 0.82;
+      char.rightArmGroup.position.y = 0.82;
+      char.leftArmGroup.rotation.set(-0.25, 0, 0);
+
+      if (char.holdingPhone) {
+        char.rightArmGroup.rotation.set(-0.95, -0.15, -0.2);
+      } else {
+        char.rightArmGroup.rotation.set(-0.25, 0, 0);
+      }
+
+      // Name badge positioned beside the head at eye level
+      char.nameTag.position.set(sideX, 1.10, 0);
+      char.nameTag.scale.set(0.85, 0.24, 1.0);
+      char.speechBubble.position.set(0, 2.20, 0);
+    }
   }
 
-  pickRandomWalkTarget(char) {
+  pickRandomWalkTarget(char, force = false) {
+    if (char.isHonorary && !force) {
+      return;
+    }
     const targetX = (Math.random() - 0.5) * 6.0;
     const targetZ = -13.8 + Math.random() * 9.0;
-    char.targetPos.set(targetX, 0, targetZ);
+    char.targetPos.set(targetX, char.baseY || 0.1, targetZ);
+    this.standUp(char);
     char.state = 'walking';
-    char.stateTimer = 10.0;
+    char.stateTimer = 15.0;
+  }
+
+  triggerRandomSeatSwap() {
+    // Only 1 person moves at a time to preserve the calm, atmospheric beach aesthetic
+    if (this.characters.some((c) => c.state === 'walking')) {
+      return;
+    }
+
+    // Eligible candidates: seated non-honorary spectators not currently cheering
+    const eligibleChars = this.characters.filter(
+      (c) => !c.isHonorary && c.state === 'sitting' && c.cheerTimer <= 0
+    );
+    if (eligibleChars.length === 0) return;
+
+    const char = eligibleChars[Math.floor(Math.random() * eligibleChars.length)];
+
+    // Target slots: audience slots (index >= 3)
+    const candidateSlots = [];
+    for (let i = 3; i < this.multiDepthSlots.length; i++) {
+      if (i !== char.currentSlotIndex) {
+        candidateSlots.push({ index: i, slot: this.multiDepthSlots[i] });
+      }
+    }
+    if (candidateSlots.length === 0) return;
+
+    const chosen = candidateSlots[Math.floor(Math.random() * candidateSlots.length)];
+    const targetSlot = chosen.slot;
+
+    this.standUp(char);
+    char.state = 'walking';
+    char.stateTimer = 25.0;
+    char.targetSlotIndex = chosen.index;
+    char.baseY = targetSlot.baseY !== undefined ? targetSlot.baseY : 0.1;
+    char.targetPos.set(targetSlot.x, char.baseY, targetSlot.z);
   }
 
   update(deltaTime) {
     const time = Date.now() * 0.0025;
 
+    // Periodic natural festival speech bubbles from random spectators
     if (this.enableAutoSpeech) {
       this.speechTimer -= deltaTime;
       if (this.speechTimer <= 0) {
-        this.speechTimer = 8.0 + Math.random() * 8.0;
-        const speaker = this.characters[Math.floor(Math.random() * this.characters.length)];
-        if (speaker && speaker.speechTimer <= 0) {
+        this.speechTimer = this.speechInterval + Math.random() * 2.5;
+        const availableSpeakers = this.characters.filter((c) => c.speechTimer <= 0);
+        if (availableSpeakers.length > 0) {
+          const speaker = availableSpeakers[Math.floor(Math.random() * availableSpeakers.length)];
           const phrase = SYSTEM_SPEECH_PHRASES[Math.floor(Math.random() * SYSTEM_SPEECH_PHRASES.length)];
-          this.showSpeech(speaker, phrase, 3.5);
+          this.showSpeech(speaker, phrase, 3.6);
+
+          // 40% chance another spectator chimes in with a natural reaction shortly after
+          if (Math.random() < 0.40 && availableSpeakers.length > 1) {
+            this.pendingReplyTimer = 0.9 + Math.random() * 0.8;
+          }
+        }
+      }
+
+      // Conversational response from fellow spectator
+      if (this.pendingReplyTimer > 0) {
+        this.pendingReplyTimer -= deltaTime;
+        if (this.pendingReplyTimer <= 0) {
+          const availableSpeakers = this.characters.filter((c) => c.speechTimer <= 0);
+          if (availableSpeakers.length > 0) {
+            const replier = availableSpeakers[Math.floor(Math.random() * availableSpeakers.length)];
+            const replyPhrase = SYSTEM_SPEECH_PHRASES[Math.floor(Math.random() * SYSTEM_SPEECH_PHRASES.length)];
+            this.showSpeech(replier, replyPhrase, 3.2);
+          }
         }
       }
     }
 
+    // Occasional, gentle seat swapping between picnic mats
+    this.seatSwapCooldown -= deltaTime;
+    if (this.seatSwapCooldown <= 0) {
+      this.seatSwapCooldown = 50.0 + Math.random() * 30.0;
+      this.triggerRandomSeatSwap();
+    }
+
     for (const char of this.characters) {
+      if (!char.isHonorary && char.nameTagTimer > 0) {
+        char.nameTagTimer -= deltaTime;
+        if (char.nameTagTimer <= 0 && char.nameTag) {
+          char.nameTag.visible = false;
+        }
+      }
+
       if (char.speechTimer > 0) {
         char.speechTimer -= deltaTime;
         if (char.speechTimer <= 0) {
@@ -1005,12 +1870,11 @@ export class SpectatorCrowd {
         char.headGroup.rotation.x = -0.55;
 
         if (char.cheerTimer <= 0) {
-          char.state = 'watching';
-          char.stateTimer = 6 + Math.random() * 6;
+          this.sitDown(char, true);
           this.updateNameTag(char, char.name, false);
           char.leftArmGroup.rotation.z = 0;
           if (char.holdingPhone) {
-            char.rightArmGroup.rotation.set(-1.1, -0.2, -0.3);
+            char.rightArmGroup.rotation.set(-0.95, -0.15, -0.2);
           } else {
             char.rightArmGroup.rotation.z = 0;
           }
@@ -1022,23 +1886,13 @@ export class SpectatorCrowd {
 
       char.stateTimer -= deltaTime;
       if (char.stateTimer <= 0) {
-        if (char.state === 'watching') {
-          const roll = Math.random();
-          if (roll < 0.45) {
-            this.pickRandomWalkTarget(char);
-          } else if (roll < 0.75) {
-            this.sitDown(char);
-          } else {
-            char.stateTimer = 5 + Math.random() * 8;
-          }
-        } else if (char.state === 'sitting') {
-          this.standUp(char);
-          char.state = 'watching';
-          char.stateTimer = 8 + Math.random() * 8;
-        } else if (char.state === 'walking') {
-          this.standUp(char);
-          char.state = 'watching';
-          char.stateTimer = 6 + Math.random() * 10;
+        if (char.state === 'walking') {
+          // If walking timed out, sit down at current spot
+          this.sitDown(char, true);
+        } else if (char.state === 'watching') {
+          this.sitDown(char, true);
+        } else {
+          char.stateTimer = 999999;
         }
       }
 
@@ -1048,22 +1902,22 @@ export class SpectatorCrowd {
         const dz = char.targetPos.z - currentPos.z;
         const dist = Math.sqrt(dx * dx + dz * dz);
 
-        if (dist > 0.3) {
+        if (dist > 0.35) {
           char.group.rotation.y = Math.atan2(dx, dz);
 
           const step = Math.min(char.walkSpeed * deltaTime, dist);
           currentPos.x = THREE.MathUtils.clamp(
             currentPos.x + (dx / dist) * step,
-            -4.5,
-            4.5
+            -6.0,
+            6.0
           );
           currentPos.z = THREE.MathUtils.clamp(
             currentPos.z + (dz / dist) * step,
-            -14.2,
-            -4.5
+            -15.0,
+            -2.0
           );
 
-          char.walkPhase += deltaTime * 7.5;
+          char.walkPhase += deltaTime * 6.5;
           char.leftLegGroup.rotation.x = Math.sin(char.walkPhase) * 0.55;
           char.rightLegGroup.rotation.x = -Math.sin(char.walkPhase) * 0.55;
           char.group.position.y = char.baseY + Math.abs(Math.sin(char.walkPhase)) * 0.08;
@@ -1075,10 +1929,13 @@ export class SpectatorCrowd {
             char.rightArmGroup.rotation.x = Math.sin(char.walkPhase) * 0.45;
           }
         } else {
-          this.standUp(char);
+          currentPos.x = char.targetPos.x;
+          currentPos.z = char.targetPos.z;
           char.group.rotation.y = Math.PI;
-          char.state = 'watching';
-          char.stateTimer = 6 + Math.random() * 10;
+          if (char.targetSlotIndex !== undefined) {
+            char.currentSlotIndex = char.targetSlotIndex;
+          }
+          this.sitDown(char, true);
         }
       } else if (char.state === 'sitting') {
         const breath = Math.sin(time + char.phaseOffset) * 0.02;
@@ -1098,6 +1955,25 @@ export class SpectatorCrowd {
           char.rightArmGroup.rotation.z = -Math.sin(time * 0.5 + char.phaseOffset) * 0.04;
         }
       }
+    }
+  }
+
+  dispose() {
+    if (Array.isArray(this.disposables)) {
+      for (const item of this.disposables) {
+        if (item && typeof item.dispose === 'function') {
+          item.dispose();
+        }
+      }
+      this.disposables = [];
+    }
+    if (Array.isArray(this.eventSubscriptions)) {
+      for (const sub of this.eventSubscriptions) {
+        if (typeof sub === 'function') {
+          sub();
+        }
+      }
+      this.eventSubscriptions = [];
     }
   }
 }

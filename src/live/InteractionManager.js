@@ -29,6 +29,14 @@ export class InteractionManager {
     this.queueProcessorTimer = null;
     this.lastTriggerTime = new Map();
 
+    // Honorary Leaderboard tracking (Top Gifter, Top Liker, Top Commenter)
+    this.userStats = new Map();
+    this.leaderboard = {
+      gifter: { name: 'Anh Tuan VIP', score: 1000, user: null },
+      liker: { name: 'Linh Dan Top', score: 350, user: null },
+      commenter: { name: 'Quoc Huy Chat', score: 45, user: null }
+    };
+
     // Start queue processor immediately so actions execute even in offline/test/mock mode
     this.startQueueProcessor();
   }
@@ -223,6 +231,26 @@ export class InteractionManager {
           this.cameraManager.focusThirdPersonOnCharacter(char, 6.5);
         }
       }
+
+      // Track Gifter diamond score for Honorary Leaderboard
+      const diamonds = Number(event.data?.diamondCount || event.data?.diamonds || 0) * (event.data?.repeatCount || 1);
+      const stats = this.getUserStats(event.user);
+      stats.diamonds += diamonds;
+      if (stats.diamonds > this.leaderboard.gifter.score) {
+        this.leaderboard.gifter = {
+          name: event.user.nickname || event.user.name,
+          score: stats.diamonds,
+          user: event.user
+        };
+        if (this.sceneManager?.spectatorCrowd) {
+          this.sceneManager.spectatorCrowd.updateHonoraryLeader(
+            'gifter',
+            event.user,
+            stats.diamonds
+          );
+        }
+      }
+
       this.evaluateGiftRules(event);
     } else if (isChat) {
       event.type = 'chat';
@@ -233,6 +261,25 @@ export class InteractionManager {
       if (this.sceneManager && this.sceneManager.spectatorCrowd) {
         this.sceneManager.spectatorCrowd.onViewerAction(event.user, event.data);
       }
+
+      // Track Comment count for Honorary Leaderboard
+      const stats = this.getUserStats(event.user);
+      stats.comments += 1;
+      if (stats.comments > this.leaderboard.commenter.score) {
+        this.leaderboard.commenter = {
+          name: event.user.nickname || event.user.name,
+          score: stats.comments,
+          user: event.user
+        };
+        if (this.sceneManager?.spectatorCrowd) {
+          this.sceneManager.spectatorCrowd.updateHonoraryLeader(
+            'commenter',
+            event.user,
+            stats.comments
+          );
+        }
+      }
+
       this.evaluateChatRules(event);
     } else if (isLike) {
       event.type = 'like';
@@ -243,8 +290,44 @@ export class InteractionManager {
       if (this.sceneManager && this.sceneManager.spectatorCrowd) {
         this.sceneManager.spectatorCrowd.onViewerAction(event.user, event.data);
       }
+
+      // Track Likes count for Honorary Leaderboard
+      const likeDelta = Number(event.data?.likeCount || 1);
+      const stats = this.getUserStats(event.user);
+      stats.likes += likeDelta;
+      if (stats.likes > this.leaderboard.liker.score) {
+        this.leaderboard.liker = {
+          name: event.user.nickname || event.user.name,
+          score: stats.likes,
+          user: event.user
+        };
+        if (this.sceneManager?.spectatorCrowd) {
+          this.sceneManager.spectatorCrowd.updateHonoraryLeader(
+            'liker',
+            event.user,
+            stats.likes
+          );
+        }
+      }
+
       this.evaluateLikeRules(event);
     }
+  }
+
+  getUserStats(user) {
+    const rawKey = user?.id || user?.uniqueId || user?.name || 'viewer';
+    const key = String(rawKey).toLowerCase();
+    if (!this.userStats.has(key)) {
+      this.userStats.set(key, {
+        diamonds: 0,
+        likes: 0,
+        comments: 0,
+        user
+      });
+    }
+    const stats = this.userStats.get(key);
+    stats.user = user;
+    return stats;
   }
 
   evaluateLikeRules(event) {

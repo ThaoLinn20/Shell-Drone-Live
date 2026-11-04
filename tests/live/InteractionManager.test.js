@@ -233,5 +233,67 @@ describe('InteractionManager', () => {
       6.5
     );
   });
+
+  it('should track diamond/chat/like stats and update honorary podium leaders when scores exceed current threshold', () => {
+    const mockSpectatorCrowd = {
+      onViewerAction: vi.fn(),
+      updateHonoraryLeader: vi.fn()
+    };
+    const mockSceneManager = {
+      spectatorCrowd: mockSpectatorCrowd
+    };
+
+    const manager = new InteractionManager({
+      sceneManager: mockSceneManager
+    });
+
+    // 1. Gift exceeding default threshold (1000)
+    const bigGiftEvent = {
+      type: 'gift',
+      user: { id: 'tycoon_01', name: 'tycoon_01', nickname: 'Lord Tycoon' },
+      data: { giftName: 'Dragon', diamondCount: 5000, repeatCount: 1 }
+    };
+    manager.handleIncomingEvent(bigGiftEvent);
+
+    expect(manager.leaderboard.gifter.score).toBe(5000);
+    expect(manager.leaderboard.gifter.name).toBe('Lord Tycoon');
+    expect(mockSpectatorCrowd.updateHonoraryLeader).toHaveBeenCalledWith(
+      'gifter',
+      bigGiftEvent.user,
+      5000
+    );
+
+    // 2. Chat exceeding default threshold (45)
+    const chatUser = { id: 'chatter_99', name: 'chatter_99', nickname: 'Chat Master' };
+    for (let i = 0; i < 46; i++) {
+      manager.handleIncomingEvent({
+        type: 'chat',
+        user: chatUser,
+        data: { comment: 'Hello fireworks ' + i }
+      });
+    }
+    expect(manager.leaderboard.commenter.score).toBe(46);
+    expect(manager.leaderboard.commenter.name).toBe('Chat Master');
+    expect(mockSpectatorCrowd.updateHonoraryLeader).toHaveBeenCalledWith(
+      'commenter',
+      chatUser,
+      46
+    );
+
+    // 3. Likes exceeding default threshold (350)
+    const likerUser = { id: 'liker_77', name: 'liker_77', nickname: 'Tap Tap Hero' };
+    manager.handleIncomingEvent({
+      type: 'like',
+      user: likerUser,
+      data: { likeCount: 500 }
+    });
+    expect(manager.leaderboard.liker.score).toBe(500);
+    expect(manager.leaderboard.liker.name).toBe('Tap Tap Hero');
+    expect(mockSpectatorCrowd.updateHonoraryLeader).toHaveBeenCalledWith(
+      'liker',
+      likerUser,
+      500
+    );
+  });
 });
 

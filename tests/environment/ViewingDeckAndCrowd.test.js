@@ -31,6 +31,12 @@ describe('ViewingDeck and SpectatorCrowd', () => {
     const maleChar = crowd.characters.find((c) => c.gender === 'male');
     expect(maleChar).toBeDefined();
     expect(maleChar.skirt).toBeNull();
+
+    // Verify back-of-shirt jersey plate exists on all characters
+    for (const char of crowd.characters) {
+      expect(char.shirtPlate).toBeDefined();
+      expect(char.torso.children).toContain(char.shirtPlate);
+    }
   });
 
   it('should trigger viewer celebration when onViewerAction is called', () => {
@@ -73,7 +79,7 @@ describe('ViewingDeck and SpectatorCrowd', () => {
 
   it('should support sitting, standing, and walking behaviors', () => {
     const crowd = new SpectatorCrowd();
-    const char = crowd.characters[0];
+    const char = crowd.characters.find((c) => !c.isHonorary) || crowd.characters[0];
 
     // Test sitting down
     crowd.sitDown(char);
@@ -164,7 +170,9 @@ describe('ViewingDeck and SpectatorCrowd', () => {
     crowd.setThirdPersonFocus(null);
     for (const char of crowd.characters) {
       expect(char.group.visible).toBe(true);
-      expect(char.nameTag.visible).toBe(true);
+      if (char.isHonorary) {
+        expect(char.nameTag.visible).toBe(true);
+      }
     }
   });
 
@@ -180,6 +188,47 @@ describe('ViewingDeck and SpectatorCrowd', () => {
     expect(char).toBeDefined();
     // Should be at front railing (Z <= -13.0)
     expect(char.group.position.z).toBeLessThanOrEqual(-13.0);
+  });
+
+  it('should initialize 3 foreground VIP honorary podiums and update leader dynamically', () => {
+    const crowd = new SpectatorCrowd();
+
+    expect(crowd.honoraryCharacters.gifter).toBeDefined();
+    expect(crowd.honoraryCharacters.liker).toBeDefined();
+    expect(crowd.honoraryCharacters.commenter).toBeDefined();
+
+    const gifter = crowd.honoraryCharacters.gifter;
+    expect(gifter.isHonorary).toBe(true);
+    expect(gifter.honoraryType).toBe('gifter');
+    expect(gifter.nameTag.visible).toBe(true);
+    expect(gifter.state).toBe('sitting');
+    expect(crowd.vipTableGroup).toBeDefined();
+    expect(gifter.group.position.z).toBeGreaterThan(-4.0);
+
+    // Dynamic leadership overtake
+    crowd.updateHonoraryLeader('gifter', { name: 'VIP_Tycoon_99', nickname: 'Tycoon 99' }, 25000);
+    expect(gifter.name).toBe('Tycoon 99');
+    expect(gifter.honoraryScore).toBe(25000);
+    expect(gifter.state).toBe('cheering');
+  });
+
+  it('should initialize all spectators in seated posture and support seat swapping', () => {
+    const crowd = new SpectatorCrowd();
+    // All characters must be sitting by default
+    for (const char of crowd.characters) {
+      expect(char.state).toBe('sitting');
+    }
+
+    // Trigger seat swap
+    crowd.triggerRandomSeatSwap();
+    const walkingChar = crowd.characters.find((c) => c.state === 'walking');
+    expect(walkingChar).toBeDefined();
+    expect(walkingChar.isHonorary).toBeFalsy();
+
+    // Advance update until walking completes
+    walkingChar.group.position.copy(walkingChar.targetPos);
+    crowd.update(0.1);
+    expect(walkingChar.state).toBe('sitting');
   });
 });
 

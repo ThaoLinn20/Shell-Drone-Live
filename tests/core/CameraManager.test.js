@@ -14,7 +14,7 @@ describe('CameraManager', () => {
 
   it('should initialize with perspective camera at default position', () => {
     expect(cameraManager.instance).toBeDefined();
-    expect(cameraManager.instance.position.z).toBe(420);
+    expect(cameraManager.instance.position.z).toBeCloseTo(424.0);
     expect(cameraManager.trauma).toBe(0);
   });
 
@@ -134,8 +134,8 @@ describe('CameraManager', () => {
     cameraManager.instance.position.set(50, 100, 200);
     cameraManager.resetPosition();
     expect(cameraManager.instance.position.x).toBe(0);
-    expect(cameraManager.instance.position.y).toBe(6);
-    expect(cameraManager.instance.position.z).toBe(420);
+    expect(cameraManager.instance.position.y).toBe(3.20);
+    expect(cameraManager.instance.position.z).toBe(424.0);
 
     // 2. Boat mode reset
     cameraManager.setMode('boat');
