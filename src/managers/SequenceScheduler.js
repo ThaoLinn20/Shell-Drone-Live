@@ -90,13 +90,15 @@ export class SequenceScheduler {
     this.isPaused = false;
     this.ambientWasEnabled = false;
 
-    // Gift Priority Queue & Anti-Spam Rate Limiting
+    // Gift Priority Queue (unlimited dedication, no per-user cooldown)
     this.giftTriggerInfo = null;
     this.giftQueue = [];
-    this.maxQueueSize = 5;
-    this.userCooldowns = new Map();
-    this.userCooldownDuration = 30000; // 30s per-user rate limit
+    this.maxQueueSize = 15;
     this.giftCountdownInterval = 3.0;
+
+    // Consecutive series version rotation (e.g. blood_tear v1 -> v4)
+    this.lastSeriesVersion = new Map();
+    this.seriesRotationTimeout = 90000; // 90 seconds consecutive window
 
     // Listeners for UI / laptop screen
     this.listeners = [];
@@ -181,39 +183,109 @@ export class SequenceScheduler {
   }
 
   /**
-   * Resolve sequence index based on coin tier:
+   * Parse series name and version number from a sequence ID
+   * e.g. "blood_tear_v1" -> { series: "blood_tear", version: 1 }
+   * e.g. "snow" -> { series: "snow", version: 1 }
+   */
+  parseSeriesInfo(seqId = '') {
+    const match = String(seqId).match(/^(.*)_v(\d+)$/i);
+    if (match) {
+      return {
+        series: match[1].toLowerCase(),
+        version: parseInt(match[2], 10)
+      };
+    }
+    return {
+      series: String(seqId).toLowerCase(),
+      version: 1
+    };
+  }
+
+  /**
+   * Find all sequences belonging to the same series, sorted by version number ascending
+   */
+  getSeriesSequences(seriesName) {
+    if (!seriesName) return [];
+    const cleanSeries = seriesName.toLowerCase();
+    return this.sequences
+      .map((seq, idx) => ({ seq, idx, info: this.parseSeriesInfo(seq.id) }))
+      .filter(item => item.info.series === cleanSeries)
+      .sort((a, b) => a.info.version - b.info.version);
+  }
+
+  /**
+   * Resolve sequence index based on coin tier and consecutive series rotation:
    * 5 - 9 coins: random sequence
    * 10 coins: blood_tear_v1 (First Drop)
    * 20 coins: blood_tear_v2 (Melodic Bridge)
    * 50 coins: blood_tear_v3 (Build-up Surge)
    * 100+ coins: blood_tear_v4 (Grand Finale Drop)
+   *
+   * If gifts for the same series arrive consecutively within 90s,
+   * automatically rotates version: v1 -> v2 -> v3 -> v4 -> v1...
    */
   getSequenceIndexForGift(coins = 5) {
     if (this.sequences.length === 0) return 0;
     const numCoins = Number(coins) || 5;
 
-    // 5 to 9 Coins: Random sequence from available pool
+    let baseTargetSeqId = null;
+
+    // 5 to 9 Coins: Pick a random sequence
     if (numCoins < 10) {
       let randomIndex = Math.floor(Math.random() * this.sequences.length);
       if (this.sequences.length > 1 && randomIndex === this.currentIndex) {
         randomIndex = (randomIndex + 1) % this.sequences.length;
       }
-      return randomIndex;
+      baseTargetSeqId = this.sequences[randomIndex]?.id;
+    } else {
+      // 10 Coins or more: select fixed sequence based on tier mapping
+      const matchedTier = GIFT_TIER_MAPPING.find(
+        tier => tier.sequenceId && numCoins >= tier.minCoins
+      );
+      baseTargetSeqId = matchedTier ? matchedTier.sequenceId : this.sequences[0]?.id;
     }
 
-    // 10 Coins or more: select fixed sequence based on tier mapping
-    const matchedTier = GIFT_TIER_MAPPING.find(
-      tier => tier.sequenceId && numCoins >= tier.minCoins
-    );
-    if (matchedTier && matchedTier.sequenceId) {
-      const foundIdx = this.sequences.findIndex(s => s.id === matchedTier.sequenceId);
-      if (foundIdx !== -1) {
-        return foundIdx;
-      }
+    if (!baseTargetSeqId) {
+      return 0;
     }
 
-    // Fallback to random if no specific ID matched
-    return Math.floor(Math.random() * this.sequences.length);
+    // Check consecutive series rotation (e.g. blood_tear v1 -> v2 -> v3 -> v4)
+    const { series } = this.parseSeriesInfo(baseTargetSeqId);
+    const seriesList = this.getSeriesSequences(series);
+
+    // If this series only has 1 sequence (like snow), return directly
+    if (seriesList.length <= 1) {
+      const foundIdx = this.sequences.findIndex(s => s.id === baseTargetSeqId);
+      return foundIdx !== -1 ? foundIdx : 0;
+    }
+
+    // Check if this is a consecutive gift for this series within rotation timeout
+    const now = Date.now();
+    const lastState = this.lastSeriesVersion.get(series);
+
+    let targetSeqItem = null;
+    if (lastState && (now - lastState.timestamp) < this.seriesRotationTimeout) {
+      // Consecutively sent: advance to next version!
+      const nextVersionIndex = (lastState.versionIndex + 1) % seriesList.length;
+      targetSeqItem = seriesList[nextVersionIndex];
+      this.lastSeriesVersion.set(series, {
+        versionIndex: nextVersionIndex,
+        version: targetSeqItem.info.version,
+        timestamp: now
+      });
+    } else {
+      // Fresh series start: start with the base tier's sequence or v1
+      const baseIdx = seriesList.findIndex(item => item.seq.id === baseTargetSeqId);
+      const startVersionIndex = baseIdx !== -1 ? baseIdx : 0;
+      targetSeqItem = seriesList[startVersionIndex];
+      this.lastSeriesVersion.set(series, {
+        versionIndex: startVersionIndex,
+        version: targetSeqItem.info.version,
+        timestamp: now
+      });
+    }
+
+    return targetSeqItem ? targetSeqItem.idx : 0;
   }
 
   /**
@@ -243,13 +315,6 @@ export class SequenceScheduler {
       return this._enqueueGift(giftEvent, userId, userName, giftName, diamonds);
     }
 
-    // Check per-user anti-spam cooldown: if this user recently finished a sequence
-    const lastFinished = this.userCooldowns.get(userId);
-    const now = Date.now();
-    if (lastFinished && (now - lastFinished) < this.userCooldownDuration) {
-      return this._enqueueGift(giftEvent, userId, userName, giftName, diamonds);
-    }
-
     // Trigger immediately
     this._activateGiftSequence(giftEvent, userId, userName, giftName, diamonds);
     return { success: true, action: 'started' };
@@ -265,17 +330,8 @@ export class SequenceScheduler {
       diamonds = Number(data.diamondCount || data.diamonds || 1);
     }
 
-    // Anti-Spam: If this user already has an item pending in giftQueue, merge & boost diamonds
-    const existingIndex = this.giftQueue.findIndex(item => item.userId === userId);
-    if (existingIndex !== -1) {
-      const existing = this.giftQueue[existingIndex];
-      existing.diamonds += diamonds;
-      existing.giftName = giftName;
-      existing.giftEvent = giftEvent;
-      this._sortGiftQueue();
-      this._notifyListeners();
-      return { success: true, action: 'boosted', pendingDiamonds: existing.diamonds };
-    }
+    // Resolve target sequence index at enqueue time to lock in consecutive series rotation
+    const targetSequenceIndex = this.getSequenceIndexForGift(diamonds);
 
     const newItem = {
       giftEvent,
@@ -283,6 +339,7 @@ export class SequenceScheduler {
       userName,
       giftName,
       diamonds,
+      targetSequenceIndex,
       enqueuedAt: Date.now()
     };
 
@@ -306,7 +363,7 @@ export class SequenceScheduler {
     return {
       success: true,
       action: 'queued',
-      position: this.giftQueue.findIndex(item => item.userId === userId) + 1
+      position: this.giftQueue.indexOf(newItem) + 1
     };
   }
 
@@ -321,8 +378,10 @@ export class SequenceScheduler {
     });
   }
 
-  _activateGiftSequence(giftEvent, userId, userName, giftName, diamonds) {
-    const targetIndex = this.getSequenceIndexForGift(diamonds);
+  _activateGiftSequence(giftEvent, userId, userName, giftName, diamonds, targetSequenceIndex = null) {
+    const targetIndex = targetSequenceIndex !== null
+      ? targetSequenceIndex
+      : this.getSequenceIndexForGift(diamonds);
     this.currentIndex = targetIndex;
     this._prepareCurrentSequence();
 
@@ -347,15 +406,6 @@ export class SequenceScheduler {
     }
 
     this._notifyListeners();
-  }
-
-  _cleanStaleCooldowns() {
-    const now = Date.now();
-    for (const [uid, timestamp] of this.userCooldowns.entries()) {
-      if (now - timestamp > this.userCooldownDuration * 2) {
-        this.userCooldowns.delete(uid);
-      }
-    }
   }
 
   addListener(callback) {
@@ -471,13 +521,6 @@ export class SequenceScheduler {
       });
     }
 
-    // Record finish time for per-user anti-spam cooldown
-    if (this.giftTriggerInfo && this.giftTriggerInfo.userId) {
-      this.userCooldowns.set(this.giftTriggerInfo.userId, Date.now());
-    }
-
-    this._cleanStaleCooldowns();
-
     // If another gift is waiting in priority queue, launch the highest priority one next!
     if (this.giftQueue.length > 0) {
       this._sortGiftQueue();
@@ -488,7 +531,8 @@ export class SequenceScheduler {
         nextItem.userId,
         nextItem.userName,
         nextItem.giftName,
-        nextItem.diamonds
+        nextItem.diamonds,
+        nextItem.targetSequenceIndex
       );
       return;
     } else {

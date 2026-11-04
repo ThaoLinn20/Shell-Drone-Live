@@ -223,27 +223,54 @@ describe('SequenceScheduler', () => {
   });
 
   it('should resolve sequence index based on coin tiers: 5 coins random, 10, 20, 50, 100 coins fixed', () => {
-    const defaultScheduler = new SequenceScheduler();
     // 5 coins -> random valid index
-    const idx5 = defaultScheduler.getSequenceIndexForGift(5);
+    const s5 = new SequenceScheduler();
+    const idx5 = s5.getSequenceIndexForGift(5);
     expect(idx5).toBeGreaterThanOrEqual(0);
-    expect(idx5).toBeLessThan(defaultScheduler.sequences.length);
+    expect(idx5).toBeLessThan(s5.sequences.length);
 
     // 10 coins -> blood_tear_v1
-    const idx10 = defaultScheduler.getSequenceIndexForGift(10);
-    expect(defaultScheduler.sequences[idx10].id).toBe('blood_tear_v1');
+    const s10 = new SequenceScheduler();
+    const idx10 = s10.getSequenceIndexForGift(10);
+    expect(s10.sequences[idx10].id).toBe('blood_tear_v1');
 
     // 20 coins -> blood_tear_v2
-    const idx20 = defaultScheduler.getSequenceIndexForGift(20);
-    expect(defaultScheduler.sequences[idx20].id).toBe('blood_tear_v2');
+    const s20 = new SequenceScheduler();
+    const idx20 = s20.getSequenceIndexForGift(20);
+    expect(s20.sequences[idx20].id).toBe('blood_tear_v2');
 
     // 50 coins -> blood_tear_v3
-    const idx50 = defaultScheduler.getSequenceIndexForGift(50);
-    expect(defaultScheduler.sequences[idx50].id).toBe('blood_tear_v3');
+    const s50 = new SequenceScheduler();
+    const idx50 = s50.getSequenceIndexForGift(50);
+    expect(s50.sequences[idx50].id).toBe('blood_tear_v3');
 
     // 100 coins -> blood_tear_v4
-    const idx100 = defaultScheduler.getSequenceIndexForGift(100);
-    expect(defaultScheduler.sequences[idx100].id).toBe('blood_tear_v4');
+    const s100 = new SequenceScheduler();
+    const idx100 = s100.getSequenceIndexForGift(100);
+    expect(s100.sequences[idx100].id).toBe('blood_tear_v4');
+  });
+
+  it('should rotate sequence versions v1 -> v4 when gifts for the same series arrive consecutively', () => {
+    const rotationScheduler = new SequenceScheduler();
+    // Gift 1: 10 coins -> blood_tear_v1
+    const idx1 = rotationScheduler.getSequenceIndexForGift(10);
+    expect(rotationScheduler.sequences[idx1].id).toBe('blood_tear_v1');
+
+    // Gift 2: 10 coins consecutively -> blood_tear_v2
+    const idx2 = rotationScheduler.getSequenceIndexForGift(10);
+    expect(rotationScheduler.sequences[idx2].id).toBe('blood_tear_v2');
+
+    // Gift 3: 10 coins consecutively -> blood_tear_v3
+    const idx3 = rotationScheduler.getSequenceIndexForGift(10);
+    expect(rotationScheduler.sequences[idx3].id).toBe('blood_tear_v3');
+
+    // Gift 4: 10 coins consecutively -> blood_tear_v4
+    const idx4 = rotationScheduler.getSequenceIndexForGift(10);
+    expect(rotationScheduler.sequences[idx4].id).toBe('blood_tear_v4');
+
+    // Gift 5: loops back to blood_tear_v1
+    const idx5 = rotationScheduler.getSequenceIndexForGift(10);
+    expect(rotationScheduler.sequences[idx5].id).toBe('blood_tear_v1');
   });
 
   it('should prioritize higher coin gifts ahead of lower coin gifts in priority queue', () => {
@@ -280,25 +307,27 @@ describe('SequenceScheduler', () => {
     expect(scheduler.getInfo().giftTriggerInfo.diamonds).toBe(50);
   });
 
-  it('should prevent same user from flooding queue by boosting pending diamonds instead of duplicate entries', () => {
+  it('should allow enthusiastic supporters to queue multiple sequences without arbitrary cooldown restrictions', () => {
     scheduler.startSequence();
 
     // User A sends 5 coins
     scheduler.onGiftReceived({
-      user: { id: 'spammer_1', name: 'Spammer' },
+      user: { id: 'supporter_1', name: 'VIP Supporter' },
       data: { giftName: 'Rose', diamondCount: 5 }
     });
 
-    // User A spams another 10 coins immediately
+    // User A sends another 10 coins immediately
     const res = scheduler.onGiftReceived({
-      user: { id: 'spammer_1', name: 'Spammer' },
+      user: { id: 'supporter_1', name: 'VIP Supporter' },
       data: { giftName: 'Confetti', diamondCount: 10 }
     });
 
-    expect(res.action).toBe('boosted');
-    // Queue should still have only 1 item for this user!
-    expect(scheduler.giftQueue.length).toBe(1);
-    expect(scheduler.giftQueue[0].diamonds).toBe(15);
+    expect(res.action).toBe('queued');
+    // Both gifts are welcomed and queued in priority order!
+    expect(scheduler.giftQueue.length).toBe(2);
+    // 10 coins is prioritized before 5 coins
+    expect(scheduler.giftQueue[0].diamonds).toBe(10);
+    expect(scheduler.giftQueue[1].diamonds).toBe(5);
   });
 });
 
