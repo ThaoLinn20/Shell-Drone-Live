@@ -3,7 +3,7 @@
   "name": "Default TikTok Live Interaction Rules",
   "settings": {
     "queueIntervalMs": 250,
-    "maxConcurrentShells": 6,
+    "maxConcurrentShells": 16,
     "dimSkyOnSuperGift": true,
     "streakBatchingWindowMs": 400
   },
@@ -49,7 +49,7 @@
       },
       "action": {
         "mode": "volley",
-        "count": 2,
+        "count": 4,
         "tier": "medium",
         "dynamics": "crysanthemum-spiral-v2"
       },
@@ -65,7 +65,7 @@
       },
       "action": {
         "mode": "volley",
-        "count": 4,
+        "count": 8,
         "tier": "grand",
         "dynamics": "willow"
       },
@@ -81,7 +81,7 @@
       },
       "action": {
         "mode": "volley",
-        "count": 7,
+        "count": 16,
         "tier": "super",
         "dimSky": true
       },

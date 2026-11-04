@@ -183,7 +183,7 @@ export class LiveHUDOverlay {
       { label: 'Universe (34999)', action: () => this.simulateGift('TikTok Universe', 6268, 34999) },
       { label: 'Chat !tim', action: () => this.simulateChat('!tim') },
       { label: 'Chat !phaohoa', action: () => this.simulateChat('!phaohoa') },
-      { label: 'Like (1-2 phao)', action: () => this.simulateLike() }
+      { label: 'Like (2-4 phao)', action: () => this.simulateLike() }
     ];
 
     for (const btn of testButtons) {

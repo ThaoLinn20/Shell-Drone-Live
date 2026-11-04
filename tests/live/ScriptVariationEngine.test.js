@@ -135,25 +135,25 @@ describe('ScriptVariationEngine', () => {
   });
 
   it('should calculate shot count adaptively based on tier and combo', () => {
-    // Single tap like: 1 - 2 shots
+    // Single tap like: 2 - 4 shots
     for (let i = 0; i < 20; i++) {
       const singleCount = engine.resolveShotCount('heart', 'like', 1);
-      expect(singleCount).toBeGreaterThanOrEqual(1);
-      expect(singleCount).toBeLessThanOrEqual(2);
+      expect(singleCount).toBeGreaterThanOrEqual(2);
+      expect(singleCount).toBeLessThanOrEqual(4);
     }
 
-    // Combo tap like: 2 - 4 shots
+    // Combo tap like: 4 - 8 shots
     for (let i = 0; i < 20; i++) {
       const comboCount = engine.resolveShotCount('heart', 'like', 6);
-      expect(comboCount).toBeGreaterThanOrEqual(2);
-      expect(comboCount).toBeLessThanOrEqual(4);
+      expect(comboCount).toBeGreaterThanOrEqual(4);
+      expect(comboCount).toBeLessThanOrEqual(8);
     }
 
-    // Gift count: 3 - 7 shots
+    // Gift count: 5 - 15 shots
     for (let i = 0; i < 20; i++) {
       const giftCount = engine.resolveShotCount('big_shell', 'gift', 1);
-      expect(giftCount).toBeGreaterThanOrEqual(2);
-      expect(giftCount).toBeLessThanOrEqual(7);
+      expect(giftCount).toBeGreaterThanOrEqual(5);
+      expect(giftCount).toBeLessThanOrEqual(8);
     }
   });
 

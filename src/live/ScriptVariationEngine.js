@@ -179,17 +179,18 @@ export class ScriptVariationEngine {
 
   resolveShotCount(category, eventType, comboCount = 1) {
     if (eventType === 'gift') {
-      const base = comboCount >= 5 ? 4 : 2;
-      return Math.floor(Math.random() * 3 + base);
+      const base = comboCount >= 5 ? 9 : 5;
+      const spread = comboCount >= 5 ? 7 : 4;
+      return Math.floor(Math.random() * spread + base);
     }
-    if (eventType === 'comment') {
-      return Math.floor(Math.random() * 2 + 1);
+    if (eventType === 'comment' || eventType === 'chat') {
+      return Math.floor(Math.random() * 4 + 3);
     }
     // 'like'
     if (comboCount > 3) {
-      return Math.floor(Math.random() * 3 + 2);
+      return Math.floor(Math.random() * 5 + 4);
     }
-    return Math.floor(Math.random() * 2 + 1);
+    return Math.floor(Math.random() * 3 + 2);
   }
 
   resolveAltitude(category) {
@@ -229,21 +230,32 @@ export class ScriptVariationEngine {
       }
 
       // 2. Count adjustment
-      if (item.count !== undefined) {
-        if (category === 'sequence') {
-          item.count = Math.max(2, Math.min(item.count, 6));
-        } else {
-          item.count = shotCount;
-        }
+      if (category === 'sequence') {
+        item.count = Math.max(4, Math.min((item.count || 3) * 2, 10));
+      } else {
+        item.count = shotCount;
       }
 
-      // 3. Spatial Jitter across river
-      const centerJitter = (Math.random() - 0.5) * 0.36;
-      if (item.x1 !== undefined && item.x2 !== undefined) {
-        item.x1 = Math.max(0.08, Math.min(0.92, item.x1 + centerJitter));
-        item.x2 = Math.max(0.08, Math.min(0.92, item.x2 + centerJitter + (Math.random() - 0.5) * 0.12));
+      // 3. Spatial Jitter framed strictly within camera field of view
+      item.sectorId = 'center';
+      if (category === 'heart') {
+        const heartJitter = (Math.random() - 0.5) * 0.28;
+        item.ratioX = Math.max(0.32, Math.min(0.68, 0.50 + heartJitter));
+        if (item.x1 !== undefined && item.x2 !== undefined) {
+          item.x1 = Math.max(0.25, Math.min(0.75, item.x1 + heartJitter));
+          item.x2 = Math.max(0.25, Math.min(0.75, item.x2 + heartJitter));
+        }
       } else {
-        item.ratioX = Math.max(0.12, Math.min(0.88, 0.50 + centerJitter));
+        const centerJitter = (Math.random() - 0.5) * 0.32;
+        if (item.x1 !== undefined && item.x2 !== undefined) {
+          item.x1 = Math.max(0.18, Math.min(0.82, item.x1 + centerJitter));
+          item.x2 = Math.max(0.18, Math.min(0.82, item.x2 + centerJitter));
+        } else {
+          item.ratioX = Math.max(0.22, Math.min(0.78, 0.50 + centerJitter));
+        }
+      }
+      if (item.angle !== undefined) {
+        item.angle = Math.max(-0.25, Math.min(0.25, item.angle));
       }
 
       // 4. Color Variation & Heart Outline Safeguards

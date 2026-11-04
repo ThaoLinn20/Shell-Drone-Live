@@ -353,7 +353,7 @@ export class InteractionManager {
     const actionItem = {
       rule: rule,
       event: sourceEvent,
-      count: Math.min(count, 5),
+      count: Math.min(count, 20),
       priority: priority,
       queuedAt: Date.now()
     };
