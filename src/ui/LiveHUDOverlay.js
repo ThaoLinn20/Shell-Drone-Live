@@ -10,6 +10,8 @@ export class LiveHUDOverlay {
     this.interactionManager = options.interactionManager || null;
     this.visible = true;
     this.activeBanners = [];
+    this.statusFadeTimer = null;
+    this.currentStatus = 'disconnected';
 
     this.initDOM();
   }
@@ -53,9 +55,18 @@ export class LiveHUDOverlay {
     this.statusPill.style.gap = '8px';
     this.statusPill.style.pointerEvents = 'auto';
     this.statusPill.style.cursor = 'pointer';
+    this.statusPill.style.transition = 'opacity 0.4s ease, border-color 0.3s ease, color 0.3s ease';
     this.statusPill.title = 'Click to toggle Quick Test Controls';
     this.statusPill.innerText = 'TikTok Live: Disconnected';
     this.statusPill.addEventListener('click', () => this.toggleTestToolbar());
+    this.statusPill.addEventListener('mouseenter', () => {
+      this.statusPill.style.opacity = '1';
+    });
+    this.statusPill.addEventListener('mouseleave', () => {
+      if (this.currentStatus === 'connected') {
+        this.schedulePillFade();
+      }
+    });
     this.container.appendChild(this.statusPill);
 
     // Quick Test Toolbar for streamer (bottom center, hidden by default, toggled via Hotkey or Pill)
@@ -63,9 +74,17 @@ export class LiveHUDOverlay {
 
     document.body.appendChild(this.container);
 
+    // Clean Feed Hotkey (F10 to toggle all live HUD overlays for pristine streaming)
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'F10') {
+        this.toggleCleanFeed();
+      }
+    });
+
     // Bind interaction manager status if available
     if (this.interactionManager) {
       this.interactionManager.on('status', (status) => this.updateStatus(status));
+      this.interactionManager.on('tiktok_room_status', (room) => this.updateRoomStatus(room));
     }
   }
 
@@ -78,6 +97,7 @@ export class LiveHUDOverlay {
     this.testToolbar.style.display = 'none';
     this.testToolbar.style.flexWrap = 'wrap';
     this.testToolbar.style.justifyContent = 'center';
+    this.testToolbar.style.alignItems = 'center';
     this.testToolbar.style.gap = '8px';
     this.testToolbar.style.padding = '10px 16px';
     this.testToolbar.style.background = 'rgba(15, 23, 42, 0.90)';
@@ -87,6 +107,53 @@ export class LiveHUDOverlay {
     this.testToolbar.style.pointerEvents = 'auto';
     this.testToolbar.style.maxWidth = '90vw';
 
+    // Account quick-connect input row
+    const userRow = document.createElement('div');
+    userRow.style.display = 'flex';
+    userRow.style.alignItems = 'center';
+    userRow.style.gap = '4px';
+    userRow.style.marginRight = '8px';
+
+    const userPrefix = document.createElement('span');
+    userPrefix.innerText = '@';
+    userPrefix.style.color = '#94a3b8';
+    userPrefix.style.fontSize = '12px';
+    userPrefix.style.fontWeight = '700';
+
+    const userInput = document.createElement('input');
+    userInput.type = 'text';
+    userInput.value = 'thaolinn20';
+    userInput.placeholder = 'username';
+    userInput.style.padding = '5px 8px';
+    userInput.style.fontSize = '12px';
+    userInput.style.borderRadius = '6px';
+    userInput.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+    userInput.style.background = 'rgba(255, 255, 255, 0.08)';
+    userInput.style.color = '#ffffff';
+    userInput.style.width = '100px';
+
+    const connectBtn = document.createElement('button');
+    connectBtn.innerText = 'Connect';
+    connectBtn.style.padding = '5px 10px';
+    connectBtn.style.fontSize = '12px';
+    connectBtn.style.fontWeight = '600';
+    connectBtn.style.borderRadius = '6px';
+    connectBtn.style.border = '1px solid rgba(56, 189, 248, 0.4)';
+    connectBtn.style.background = 'rgba(56, 189, 248, 0.2)';
+    connectBtn.style.color = '#38bdf8';
+    connectBtn.style.cursor = 'pointer';
+    connectBtn.addEventListener('click', () => {
+      const username = userInput.value.trim();
+      if (username && this.interactionManager) {
+        this.interactionManager.setTargetUsername(username);
+      }
+    });
+
+    userRow.appendChild(userPrefix);
+    userRow.appendChild(userInput);
+    userRow.appendChild(connectBtn);
+    this.testToolbar.appendChild(userRow);
+
     const testButtons = [
       { label: 'Rose (1)', action: () => this.simulateGift('Rose', 5655, 1) },
       { label: 'Heart (5)', action: () => this.simulateGift('Finger Heart', 5882, 5) },
@@ -94,7 +161,8 @@ export class LiveHUDOverlay {
       { label: 'Fireworks (1088)', action: () => this.simulateGift('Fireworks', 6104, 1088) },
       { label: 'Universe (34999)', action: () => this.simulateGift('TikTok Universe', 6268, 34999) },
       { label: 'Chat !tim', action: () => this.simulateChat('!tim') },
-      { label: 'Chat !phaohoa', action: () => this.simulateChat('!phaohoa') }
+      { label: 'Chat !phaohoa', action: () => this.simulateChat('!phaohoa') },
+      { label: 'Like (1-2 phao)', action: () => this.simulateLike() }
     ];
 
     for (const btn of testButtons) {
@@ -128,20 +196,81 @@ export class LiveHUDOverlay {
     this.testToolbar.style.display = isHidden ? 'flex' : 'none';
   }
 
+  toggleCleanFeed() {
+    if (!this.container) return;
+    this.visible = !this.visible;
+    this.container.style.display = this.visible ? 'block' : 'none';
+  }
+
+  schedulePillFade() {
+    if (this.statusFadeTimer) {
+      clearTimeout(this.statusFadeTimer);
+    }
+    this.statusFadeTimer = setTimeout(() => {
+      if (this.statusPill && this.currentStatus === 'connected') {
+        this.statusPill.style.opacity = '0';
+      }
+    }, 3500);
+  }
+
   updateStatus(status) {
     if (!this.statusPill) return;
+    this.currentStatus = status;
+
+    if (this.statusFadeTimer) {
+      clearTimeout(this.statusFadeTimer);
+      this.statusFadeTimer = null;
+    }
+
     if (status === 'connected') {
       this.statusPill.style.borderColor = 'rgba(34, 197, 94, 0.4)';
       this.statusPill.style.color = '#4ade80';
       this.statusPill.innerText = 'TikTok Live: Connected';
+      this.statusPill.style.opacity = '1';
+      this.schedulePillFade();
     } else if (status === 'connecting') {
       this.statusPill.style.borderColor = 'rgba(234, 179, 8, 0.4)';
       this.statusPill.style.color = '#facc15';
       this.statusPill.innerText = 'TikTok Live: Connecting...';
+      this.statusPill.style.opacity = '1';
     } else {
       this.statusPill.style.borderColor = 'rgba(255, 255, 255, 0.15)';
       this.statusPill.style.color = '#94a3b8';
       this.statusPill.innerText = 'TikTok Live: Offline (Test Mode)';
+      this.statusPill.style.opacity = '1';
+    }
+  }
+
+  updateRoomStatus(roomEvent) {
+    if (!this.statusPill || !roomEvent) return;
+    const username = roomEvent.username || 'thaolinn20';
+
+    if (this.statusFadeTimer) {
+      clearTimeout(this.statusFadeTimer);
+      this.statusFadeTimer = null;
+    }
+
+    if (roomEvent.status === 'connected') {
+      this.statusPill.style.borderColor = 'rgba(34, 197, 94, 0.4)';
+      this.statusPill.style.color = '#4ade80';
+      this.statusPill.innerText = 'TikTok Live: @' + username + ' (Connected)';
+      this.statusPill.style.opacity = '1';
+      this.schedulePillFade();
+    } else if (roomEvent.status === 'connecting') {
+      this.statusPill.style.borderColor = 'rgba(234, 179, 8, 0.4)';
+      this.statusPill.style.color = '#facc15';
+      this.statusPill.innerText = 'TikTok Live: @' + username + ' (Connecting...)';
+      this.statusPill.style.opacity = '1';
+    } else if (roomEvent.status === 'error' || roomEvent.status === 'disconnected') {
+      this.statusPill.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+      this.statusPill.style.color = '#f87171';
+      this.statusPill.innerText = 'TikTok Live: @' + username + ' (Waiting for stream...)';
+      this.statusPill.style.opacity = '1';
+    } else if (roomEvent.status === 'ended') {
+      this.statusPill.style.borderColor = 'rgba(234, 179, 8, 0.4)';
+      this.statusPill.style.color = '#facc15';
+      this.statusPill.innerText = 'TikTok Live: @' + username + ' (Stream Ended)';
+      this.statusPill.style.opacity = '1';
     }
   }
 
@@ -245,6 +374,30 @@ export class LiveHUDOverlay {
   notifyChat(event) {
     // Optional brief chat toast if needed
     console.log('[LiveHUD] Chat: ' + event.user?.nickname + ': ' + event.data?.comment);
+  }
+
+  notifyLike(event) {
+    // Optional brief like toast if needed
+    console.log('[LiveHUD] Like tap from ' + event.user?.nickname);
+  }
+
+  simulateLike() {
+    if (!this.interactionManager) return;
+    const evt = {
+      type: 'like',
+      user: {
+        id: 'sim_user',
+        name: 'live_viewer',
+        nickname: 'Live Viewer',
+        avatar: ''
+      },
+      data: {
+        likeCount: 5,
+        totalLikes: 100
+      },
+      timestamp: Date.now()
+    };
+    this.interactionManager.handleIncomingEvent(evt);
   }
 
   simulateGift(giftName, giftId, diamonds) {

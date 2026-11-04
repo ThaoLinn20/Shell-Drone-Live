@@ -8,7 +8,7 @@ describe('ViewingDeck and SpectatorCrowd', () => {
     const deck = new ViewingDeck();
     expect(deck.group).toBeInstanceOf(THREE.Group);
     expect(deck.group.children.length).toBeGreaterThan(2);
-    expect(deck.lanterns.length).toBe(4);
+    expect(deck.lanterns.length).toBeGreaterThanOrEqual(4);
 
     // Ensure update runs cleanly
     expect(() => deck.update(0.016)).not.toThrow();

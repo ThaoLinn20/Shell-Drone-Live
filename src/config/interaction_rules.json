@@ -130,6 +130,22 @@
         "tier": "medium"
       },
       "priority": 3
+    },
+    {
+      "id": "rule_like_tap",
+      "name": "Like Screen Tap",
+      "condition": {
+        "type": "like"
+      },
+      "action": {
+        "mode": "random_volley",
+        "minCount": 1,
+        "maxCount": 2,
+        "tier": "mini",
+        "shapes": ["heart", "sphere", "star"]
+      },
+      "priority": 1,
+      "rateLimitMs": 350
     }
   ]
 }

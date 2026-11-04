@@ -119,8 +119,8 @@ const timelineEditor = enableLegacyEditor
 if (!enableLegacyEditor) {
   // Fixed broadcast camera rig: stationary tripod framing distant fireworks over viewing deck
   cameraManager.lockBroadcastView(
-    new THREE.Vector3(0, 7.2, 424),
-    new THREE.Vector3(0, 85, 0)
+    new THREE.Vector3(0, 6.2, 421.5),
+    new THREE.Vector3(0, 90, 0)
   );
   inputSystem.isCameraLocked = true;
   movementSystem.locked = true;
@@ -170,8 +170,8 @@ renderer.instance.domElement.addEventListener('click', () => {
     const preset = inputSystem.getSelectedPreset();
     const liveOptions = {
       sectorId: 'center',
-      ratioX: 0.46 + (Math.random() - 0.5) * 0.08,
-      ratioY: 0.20 + (Math.random() - 0.5) * 0.12,
+      ratioX: 0.50 + (Math.random() - 0.5) * 0.28,
+      ratioY: 0.52 + (Math.random() - 0.5) * 0.32,
       effectOverrides: { instantBurst: false }
     };
     if (preset && preset.type === 'comet_cluster') {

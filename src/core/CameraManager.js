@@ -303,7 +303,7 @@ export class CameraManager {
     this.trauma = Math.min(0.70, this.trauma + intensity);
   }
 
-  lockBroadcastView(position = new THREE.Vector3(0, 7.2, 424), target = new THREE.Vector3(0, 85, 0)) {
+  lockBroadcastView(position = new THREE.Vector3(0, 6.2, 421.5), target = new THREE.Vector3(0, 90, 0)) {
     this.isBroadcastLocked = true;
     this.broadcastPosition = position.clone();
     this.broadcastTarget = target.clone();

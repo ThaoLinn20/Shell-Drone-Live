@@ -11,10 +11,10 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "bridge": "node bridge/server.js",
-    "live": "concurrently \"node bridge/server.js\" \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
-    "live:desktop": "concurrently \"node bridge/server.js\" \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
-    "live:web": "concurrently \"node bridge/server.js\" \"vite\"",
+    "bridge": "node bridge/server.js thaolinn20",
+    "live": "concurrently \"node bridge/server.js thaolinn20\" \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
+    "live:desktop": "concurrently \"node bridge/server.js thaolinn20\" \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
+    "live:web": "concurrently \"node bridge/server.js thaolinn20\" \"vite\"",
     "media:mute-previews": "node scripts/mute-preview-videos.js",
     "assets:slice-moons": "node scripts/slice-moons.js",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
@@ -71,6 +71,7 @@
   },
   "dependencies": {
     "three": "^0.183.2",
+    "tiktok-live-connector": "^2.5.0",
     "ws": "^8.22.1"
   }
 }

@@ -130,12 +130,12 @@ export class ProceduralShellGenerator {
     const countClamped = Math.max(1, Math.min(count, 8));
     for (let i = 0; i < countClamped; i++) {
       const offsetDelay = i * 0.25;
-      const xSpread = (i - (countClamped - 1) * 0.5) * 3.2;
+      const xSpread = (i - (countClamped - 1) * 0.5) * 6.5;
       const shell = this.generate(baseOptions);
       volley.push({
         shell: shell,
         delay: offsetDelay,
-        offsetPosition: { x: xSpread, y: 0, z: (Math.random() - 0.5) * 4 }
+        offsetPosition: { x: xSpread, y: 0, z: (Math.random() - 0.5) * 6 }
       });
     }
     return volley;

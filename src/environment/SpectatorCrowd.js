@@ -74,7 +74,20 @@ export class SpectatorCrowd {
 
   initCrowd() {
     const slotCount = 8;
-    const spacing = 1.25;
+    // Two natural depth tiers: Front row by railing, Back row on terrace
+    const frontRowSlots = [
+      { x: -3.3, z: -13.8 },
+      { x: -1.1, z: -13.9 },
+      { x: 1.1, z: -13.9 },
+      { x: 3.3, z: -13.8 }
+    ];
+    const backRowSlots = [
+      { x: -2.3, z: -11.2, seated: true },
+      { x: -0.7, z: -11.0, seated: false },
+      { x: 0.8, z: -11.0, seated: false },
+      { x: 2.3, z: -11.2, seated: true }
+    ];
+    const allSlots = [...frontRowSlots, ...backRowSlots];
 
     for (let i = 0; i < slotCount; i++) {
       const isFemale = i % 2 === 1;
@@ -86,12 +99,14 @@ export class SpectatorCrowd {
       const color = colorPool[Math.floor(i * 0.5) % colorPool.length];
       const hairColor = HAIR_COLORS[i % HAIR_COLORS.length];
 
-      // Compact arc arrangement facing the distant fireworks
-      const x = (i - (slotCount - 1) * 0.5) * spacing + (Math.random() - 0.5) * 0.25;
-      const arcZOffset = Math.sin((i / (slotCount - 1)) * Math.PI) * 0.8;
-      const z = -13.5 - arcZOffset + ((i % 2) * 0.5) + (Math.random() - 0.5) * 0.2;
+      const slot = allSlots[i];
+      const x = slot.x + (Math.random() - 0.5) * 0.15;
+      const z = slot.z + (Math.random() - 0.5) * 0.15;
 
       const char = this.createCharacter(x, z, color, hairColor, name, gender);
+      if (slot.seated) {
+        this.sitDown(char);
+      }
       this.characters.push(char);
       this.group.add(char.group);
       this.viewerMap.set(name.toLowerCase(), i);
@@ -501,8 +516,8 @@ export class SpectatorCrowd {
   }
 
   pickRandomWalkTarget(char) {
-    const targetX = (Math.random() - 0.5) * 8.0;
-    const targetZ = -14.0 + Math.random() * 2.2;
+    const targetX = (Math.random() - 0.5) * 6.6;
+    const targetZ = -13.8 + Math.random() * 3.0;
     char.targetPos.set(targetX, 0, targetZ);
     char.state = 'walking';
     char.stateTimer = 10.0;

@@ -128,16 +128,69 @@ export class InteractionManager {
     }, 4000);
   }
 
-  // Handle incoming normalized events from Bridge or Mock injector
-  handleIncomingEvent(event) {
-    if (!event || !event.type) return;
+  // Request bridge to connect to a specific TikTok Live username
+  setTargetUsername(username) {
+    if (!username) return;
+    const cleanUser = username.replace(/^@/, '').trim();
+    if (this.socket && this.socket.readyState === 1) {
+      this.socket.send(JSON.stringify({
+        action: 'connect',
+        username: cleanUser
+      }));
+    }
+  }
 
-    if (event.type === 'system') {
-      this.emit('system', event);
+  // Handle incoming normalized events from Bridge, TikFinity, or Mock injector
+  handleIncomingEvent(rawEvent) {
+    if (!rawEvent) return;
+
+    const eventType = (rawEvent.type || rawEvent.event || '').toLowerCase();
+    if (!eventType) return;
+
+    // Handle room connection state events
+    if (eventType === 'tiktok_room_status') {
+      this.emit('tiktok_room_status', rawEvent);
+      if (this.hud && typeof this.hud.updateRoomStatus === 'function') {
+        this.hud.updateRoomStatus(rawEvent);
+      }
       return;
     }
 
-    if (event.type === 'gift') {
+    if (eventType === 'system') {
+      this.emit('system', rawEvent);
+      if (rawEvent.roomState && this.hud && typeof this.hud.updateRoomStatus === 'function') {
+        this.hud.updateRoomStatus(rawEvent.roomState);
+      }
+      return;
+    }
+
+    const event = rawEvent;
+    if (!event.type) {
+      event.type = eventType;
+    }
+
+    // Normalize user object if missing
+    if (!event.user) {
+      const rawData = event.data || {};
+      event.user = {
+        id: rawData.userId || rawData.uniqueId || 'viewer',
+        name: rawData.uniqueId || rawData.name || 'viewer',
+        nickname: rawData.nickname || rawData.displayName || rawData.name || 'Viewer',
+        avatar: rawData.profilePictureUrl || rawData.avatar || ''
+      };
+    }
+
+    // Normalize TikFinity gift / chat data properties
+    if (event.data) {
+      if (event.data.diamondCount === undefined && event.data.diamonds !== undefined) {
+        event.data.diamondCount = event.data.diamonds;
+      }
+      if (event.data.comment === undefined && event.data.message !== undefined) {
+        event.data.comment = event.data.message;
+      }
+    }
+
+    if (eventType === 'gift') {
       this.emit('gift', event);
       if (this.hud && typeof this.hud.notifyGift === 'function') {
         this.hud.notifyGift(event);
@@ -146,7 +199,7 @@ export class InteractionManager {
         this.sceneManager.spectatorCrowd.onViewerAction(event.user, event.data);
       }
       this.evaluateGiftRules(event);
-    } else if (event.type === 'chat') {
+    } else if (eventType === 'chat') {
       this.emit('chat', event);
       if (this.hud && typeof this.hud.notifyChat === 'function') {
         this.hud.notifyChat(event);
@@ -155,7 +208,45 @@ export class InteractionManager {
         this.sceneManager.spectatorCrowd.onViewerAction(event.user, event.data);
       }
       this.evaluateChatRules(event);
+    } else if (eventType === 'like') {
+      this.emit('like', event);
+      if (this.hud && typeof this.hud.notifyLike === 'function') {
+        this.hud.notifyLike(event);
+      }
+      if (this.sceneManager && this.sceneManager.spectatorCrowd) {
+        this.sceneManager.spectatorCrowd.onViewerAction(event.user, event.data);
+      }
+      this.evaluateLikeRules(event);
     }
+  }
+
+  evaluateLikeRules(event) {
+    let matchedRule = null;
+    for (const rule of this.rules) {
+      if (rule.condition.type === 'like') {
+        matchedRule = rule;
+        break;
+      }
+    }
+
+    if (!matchedRule) {
+      matchedRule = {
+        id: 'rule_like_default',
+        name: 'Default Like Rule',
+        condition: { type: 'like' },
+        action: {
+          mode: 'random_volley',
+          minCount: 1,
+          maxCount: 2,
+          tier: 'mini',
+          shapes: ['heart', 'sphere', 'star']
+        },
+        priority: 1,
+        rateLimitMs: 350
+      };
+    }
+
+    this.enqueueAction(matchedRule, event, 1);
   }
 
   evaluateGiftRules(event) {
@@ -262,6 +353,27 @@ export class InteractionManager {
   executeAction(action, event, count = 1) {
     if (!this.fireworkSystem) return;
 
+    if (action.mode === 'random_volley') {
+      const minCount = action.minCount || 1;
+      const maxCount = action.maxCount || 2;
+      const volleyCount = Math.floor(Math.random() * (maxCount - minCount + 1)) + minCount;
+      const shapes = action.shapes || ['heart', 'sphere', 'star'];
+      const chosenShape = action.shape || shapes[Math.floor(Math.random() * shapes.length)];
+      const volley = proceduralShellGenerator.generateVolley(volleyCount, {
+        tier: action.tier || 'mini',
+        dynamics: action.dynamics,
+        shape: chosenShape,
+        color: action.color
+      });
+
+      for (const item of volley) {
+        setTimeout(() => {
+          this.launchGeneratedShell(item.shell, item.offsetPosition);
+        }, item.delay * 1000);
+      }
+      return;
+    }
+
     if (action.mode === 'volley') {
       const volleyCount = action.count || count || 2;
       const volley = proceduralShellGenerator.generateVolley(volleyCount, {
@@ -292,11 +404,34 @@ export class InteractionManager {
   launchGeneratedShell(shellConfig, offsetPosition = null) {
     if (!this.fireworkSystem) return;
 
-    // Viewport-constrained parameters for 9:16 broadcast framing
+    // Dynamically scale burst altitude based on shell tier (higher tier reaches higher sky)
+    const tier = shellConfig?.tier || 'medium';
+    let baseRatioY = 0.48;
+    let jitterY = 0.26;
+
+    if (tier === 'mini') {
+      baseRatioY = 0.38;
+      jitterY = 0.20;
+    } else if (tier === 'medium') {
+      baseRatioY = 0.52;
+      jitterY = 0.24;
+    } else if (tier === 'grand') {
+      baseRatioY = 0.65;
+      jitterY = 0.22;
+    } else if (tier === 'super') {
+      baseRatioY = 0.74;
+      jitterY = 0.16;
+    }
+
+    const calculatedRatioY = Math.max(0.24, Math.min(0.82, baseRatioY + (Math.random() - 0.5) * jitterY));
+
+    // Wider horizontal launch area across the central sky (centered at 0.50)
+    const calculatedRatioX = 0.50 + (Math.random() - 0.5) * 0.28;
+
     const options = {
       sectorId: 'center',
-      ratioX: 0.46 + (Math.random() - 0.5) * 0.08,
-      ratioY: 0.20 + (Math.random() - 0.5) * 0.12,
+      ratioX: calculatedRatioX,
+      ratioY: calculatedRatioY,
       effectOverrides: {
         instantBurst: false
       }
