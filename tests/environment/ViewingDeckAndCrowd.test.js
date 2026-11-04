@@ -17,7 +17,7 @@ describe('ViewingDeck and SpectatorCrowd', () => {
   it('should initialize SpectatorCrowd with both male and female participant characters', () => {
     const crowd = new SpectatorCrowd();
     expect(crowd.group).toBeInstanceOf(THREE.Group);
-    expect(crowd.characters.length).toBeGreaterThanOrEqual(8);
+    expect(crowd.characters.length).toBeGreaterThanOrEqual(2);
 
     const hasMale = crowd.characters.some((c) => c.gender === 'male');
     const hasFemale = crowd.characters.some((c) => c.gender === 'female');
@@ -115,6 +115,22 @@ describe('ViewingDeck and SpectatorCrowd', () => {
       expect(char.group.position.x).toBeGreaterThanOrEqual(-5.5);
       expect(char.group.position.x).toBeLessThanOrEqual(5.5);
     }
+  });
+
+  it('should support uncluttered crowd and custom slotCount', () => {
+    const crowdDefault = new SpectatorCrowd();
+    expect(crowdDefault.characters.length).toBe(2);
+
+    const crowdCustom = new SpectatorCrowd({ slotCount: 4 });
+    expect(crowdCustom.characters.length).toBe(4);
+  });
+
+  it('should support prominent speech bubbles with sender name', () => {
+    const crowd = new SpectatorCrowd();
+    const char = crowd.characters[0];
+
+    crowd.showSpeech(char, 'Xin chao ca nha!', 6.0, 'ThaoLinh');
+    expect(char.speechTimer).toBe(6.0);
   });
 });
 

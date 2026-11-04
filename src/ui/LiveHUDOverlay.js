@@ -7,9 +7,13 @@ export class LiveHUDOverlay {
     this.bannerContainer = null;
     this.statusPill = null;
     this.testToolbar = null;
+    this.ambientToggleBtn = null;
     this.interactionManager = options.interactionManager || null;
+    this.ambientFireworkManager = options.ambientFireworkManager || null;
     this.visible = true;
     this.activeBanners = [];
+    this.chatContainer = null;
+    this.activeChatMessages = [];
     this.statusFadeTimer = null;
     this.currentStatus = 'disconnected';
 
@@ -17,6 +21,8 @@ export class LiveHUDOverlay {
   }
 
   initDOM() {
+    if (typeof document === 'undefined') return;
+
     this.container = document.createElement('div');
     this.container.id = 'live-hud-overlay';
     this.container.style.position = 'fixed';
@@ -30,12 +36,25 @@ export class LiveHUDOverlay {
     this.bannerContainer = document.createElement('div');
     this.bannerContainer.style.position = 'absolute';
     this.bannerContainer.style.left = '24px';
-    this.bannerContainer.style.bottom = '36%';
+    this.bannerContainer.style.bottom = '38%';
     this.bannerContainer.style.display = 'flex';
     this.bannerContainer.style.flexDirection = 'column';
     this.bannerContainer.style.gap = '8px';
-    this.bannerContainer.style.maxWidth = '360px';
+    this.bannerContainer.style.maxWidth = '380px';
     this.container.appendChild(this.bannerContainer);
+
+    // Live Chat Stream Container (bottom left corner, large & clear font)
+    this.chatContainer = document.createElement('div');
+    this.chatContainer.id = 'live-chat-stream';
+    this.chatContainer.style.position = 'absolute';
+    this.chatContainer.style.left = '24px';
+    this.chatContainer.style.bottom = '28px';
+    this.chatContainer.style.display = 'flex';
+    this.chatContainer.style.flexDirection = 'column';
+    this.chatContainer.style.gap = '10px';
+    this.chatContainer.style.maxWidth = '460px';
+    this.chatContainer.style.pointerEvents = 'none';
+    this.container.appendChild(this.chatContainer);
 
     // Live status pill (top right corner)
     this.statusPill = document.createElement('div');
@@ -75,11 +94,13 @@ export class LiveHUDOverlay {
     document.body.appendChild(this.container);
 
     // Clean Feed Hotkey (F10 to toggle all live HUD overlays for pristine streaming)
-    window.addEventListener('keydown', (e) => {
-      if (e.code === 'F10') {
-        this.toggleCleanFeed();
-      }
-    });
+    if (typeof window !== 'undefined') {
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'F10') {
+          this.toggleCleanFeed();
+        }
+      });
+    }
 
     // Bind interaction manager status if available
     if (this.interactionManager) {
@@ -187,7 +208,45 @@ export class LiveHUDOverlay {
       this.testToolbar.appendChild(el);
     }
 
+    // Auto Fire Low-Altitude Ambient Toggle Button
+    this.ambientToggleBtn = document.createElement('button');
+    this.ambientToggleBtn.style.padding = '6px 12px';
+    this.ambientToggleBtn.style.fontSize = '12px';
+    this.ambientToggleBtn.style.fontWeight = '700';
+    this.ambientToggleBtn.style.borderRadius = '6px';
+    this.ambientToggleBtn.style.cursor = 'pointer';
+    this.ambientToggleBtn.style.transition = 'all 0.15s ease';
+    this.ambientToggleBtn.title = 'Toggle Auto Low-Altitude Ambient Fireworks (Hotkey: A)';
+    const initialAutoState = this.ambientFireworkManager ? this.ambientFireworkManager.enabled : true;
+    this.updateAmbientBtnState(initialAutoState);
+    this.ambientToggleBtn.addEventListener('click', () => {
+      if (this.ambientFireworkManager) {
+        const nextState = this.ambientFireworkManager.toggle();
+        this.updateAmbientBtnState(nextState);
+      }
+    });
+    this.testToolbar.appendChild(this.ambientToggleBtn);
+
     this.container.appendChild(this.testToolbar);
+  }
+
+  updateAmbientBtnState(isEnabled) {
+    if (!this.ambientToggleBtn) return;
+    if (isEnabled) {
+      this.ambientToggleBtn.innerText = 'Auto Fire: ON';
+      this.ambientToggleBtn.style.background = 'rgba(34, 197, 94, 0.25)';
+      this.ambientToggleBtn.style.border = '1px solid rgba(34, 197, 94, 0.6)';
+      this.ambientToggleBtn.style.color = '#4ade80';
+    } else {
+      this.ambientToggleBtn.innerText = 'Auto Fire: OFF';
+      this.ambientToggleBtn.style.background = 'rgba(239, 68, 68, 0.15)';
+      this.ambientToggleBtn.style.border = '1px solid rgba(239, 68, 68, 0.4)';
+      this.ambientToggleBtn.style.color = '#f87171';
+    }
+  }
+
+  updateAmbientToggleUI(isEnabled) {
+    this.updateAmbientBtnState(isEnabled);
   }
 
   toggleTestToolbar() {
@@ -372,8 +431,92 @@ export class LiveHUDOverlay {
   }
 
   notifyChat(event) {
-    // Optional brief chat toast if needed
-    console.log('[LiveHUD] Chat: ' + event.user?.nickname + ': ' + event.data?.comment);
+    if (!this.chatContainer) return;
+    const user = event.user || {};
+    const nickname = user.nickname || user.name || 'Viewer';
+    const comment = event.data?.comment || '';
+    if (!comment) return;
+
+    this.showChatMessage(nickname, comment);
+  }
+
+  showChatMessage(nickname, comment) {
+    if (!this.chatContainer) return;
+
+    // Keep up to 4 most recent chat bubbles
+    if (this.activeChatMessages.length >= 4) {
+      const oldest = this.activeChatMessages.shift();
+      if (oldest && oldest.element && oldest.element.parentNode) {
+        oldest.element.parentNode.removeChild(oldest.element);
+      }
+    }
+
+    const card = document.createElement('div');
+    card.style.display = 'flex';
+    card.style.flexDirection = 'column';
+    card.style.gap = '4px';
+    card.style.padding = '10px 16px';
+    card.style.background = 'rgba(15, 23, 42, 0.88)';
+    card.style.backdropFilter = 'blur(12px)';
+    card.style.border = '1px solid rgba(255, 255, 255, 0.18)';
+    card.style.borderLeft = '4px solid #38bdf8';
+    card.style.borderRadius = '10px';
+    card.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.45)';
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(12px)';
+    card.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+    card.style.pointerEvents = 'none';
+
+    // Header with user nickname
+    const headerRow = document.createElement('div');
+    headerRow.style.display = 'flex';
+    headerRow.style.alignItems = 'center';
+    headerRow.style.gap = '8px';
+
+    const nameEl = document.createElement('span');
+    nameEl.innerText = nickname;
+    nameEl.style.fontSize = '14px';
+    nameEl.style.fontWeight = '700';
+    nameEl.style.color = '#38bdf8';
+    nameEl.style.textShadow = '0 1px 2px rgba(0, 0, 0, 0.8)';
+    headerRow.appendChild(nameEl);
+
+    // Comment text (large, bold, high contrast)
+    const commentEl = document.createElement('div');
+    commentEl.innerText = comment;
+    commentEl.style.fontSize = '18px';
+    commentEl.style.fontWeight = '600';
+    commentEl.style.color = '#ffffff';
+    commentEl.style.lineHeight = '1.35';
+    commentEl.style.wordBreak = 'break-word';
+    commentEl.style.textShadow = '0 2px 4px rgba(0, 0, 0, 0.9)';
+
+    card.appendChild(headerRow);
+    card.appendChild(commentEl);
+    this.chatContainer.appendChild(card);
+
+    requestAnimationFrame(() => {
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+    });
+
+    const messageObj = {
+      element: card,
+      timer: null
+    };
+
+    messageObj.timer = setTimeout(() => {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(-10px)';
+      setTimeout(() => {
+        if (card.parentNode) {
+          card.parentNode.removeChild(card);
+        }
+        this.activeChatMessages = this.activeChatMessages.filter((m) => m !== messageObj);
+      }, 300);
+    }, 8000);
+
+    this.activeChatMessages.push(messageObj);
   }
 
   notifyLike(event) {

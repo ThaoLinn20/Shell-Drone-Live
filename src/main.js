@@ -18,6 +18,7 @@ import { DroneSystem } from './systems/DroneSystem.js';
 import { DroneShowSequencer } from './directors/DroneShowSequencer.js';
 import { TimelineEditor } from './ui/TimelineEditor.js';
 import { InteractionManager } from './live/InteractionManager.js';
+import { AmbientFireworkManager } from './live/AmbientFireworkManager.js';
 import { LiveHUDOverlay } from './ui/LiveHUDOverlay.js';
 import { showScriptLoader } from './loaders/ShowScriptLoader.js';
 import { proceduralShellGenerator } from './factories/ProceduralShellGenerator.js';
@@ -133,21 +134,38 @@ const interactionManager = new InteractionManager({
   sceneManager
 });
 
+// Autonomous low-altitude ambient firework launcher
+const ambientFireworkManager = new AmbientFireworkManager({
+  fireworkSystem,
+  interactionManager,
+  enabled: true
+});
+ambientFireworkManager.start();
+
 const liveHUD = new LiveHUDOverlay({
-  interactionManager
+  interactionManager,
+  ambientFireworkManager
 });
 interactionManager.hud = liveHUD;
 
 // Automatically connect to TikTok Bridge
 interactionManager.connect();
 
-// Register Live Hotkey to toggle Quick Test Bar
+// Register Live Hotkeys
 hotkeyManager.register('global', 't', () => {
   liveHUD.toggleTestToolbar();
 });
 
+hotkeyManager.register('global', 'a', () => {
+  const isEnabled = ambientFireworkManager.toggle();
+  if (liveHUD && typeof liveHUD.updateAmbientToggleUI === 'function') {
+    liveHUD.updateAmbientToggleUI(isEnabled);
+  }
+});
+
 if (typeof window !== 'undefined') {
   window.interactionManager = interactionManager;
+  window.ambientFireworkManager = ambientFireworkManager;
   window.liveHUD = liveHUD;
   window.showScriptLoader = showScriptLoader;
   window.proceduralShellGenerator = proceduralShellGenerator;

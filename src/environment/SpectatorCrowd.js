@@ -66,28 +66,37 @@ export class SpectatorCrowd {
     this.position = options.position || new THREE.Vector3(0, 4.0, 415);
     this.characters = [];
     this.viewerMap = new Map();
-    this.speechTimer = 4.0;
+    this.speechTimer = options.speechTimer || 4.0;
+    this.enableAutoSpeech = options.enableAutoSpeech !== undefined ? options.enableAutoSpeech : false;
+    this.slotCount = options.slotCount !== undefined ? options.slotCount : 2;
 
     this.group.position.copy(this.position);
     this.initCrowd();
   }
 
   initCrowd() {
-    const slotCount = 8;
-    // Two natural depth tiers: Front row by railing, Back row on terrace
+    const slotCount = this.slotCount;
+    // Curated uncluttered viewing slots at the railing and terrace
     const frontRowSlots = [
-      { x: -3.3, z: -13.8 },
-      { x: -1.1, z: -13.9 },
-      { x: 1.1, z: -13.9 },
-      { x: 3.3, z: -13.8 }
+      { x: -2.4, z: -13.8 },
+      { x: 2.4, z: -13.8 }
     ];
     const backRowSlots = [
-      { x: -2.3, z: -11.2, seated: true },
-      { x: -0.7, z: -11.0, seated: false },
-      { x: 0.8, z: -11.0, seated: false },
-      { x: 2.3, z: -11.2, seated: true }
+      { x: 0.0, z: -11.5, seated: true },
+      { x: -3.8, z: -12.4 },
+      { x: 3.8, z: -12.4 },
+      { x: -1.2, z: -13.9 },
+      { x: 1.2, z: -13.9 },
+      { x: -2.3, z: -11.2, seated: true }
     ];
-    const allSlots = [...frontRowSlots, ...backRowSlots];
+    const poolSlots = [...frontRowSlots, ...backRowSlots];
+    const allSlots = poolSlots.slice(0, slotCount);
+    while (allSlots.length < slotCount) {
+      allSlots.push({
+        x: (Math.random() - 0.5) * 6.0,
+        z: -13.8 + Math.random() * 2.5
+      });
+    }
 
     for (let i = 0; i < slotCount; i++) {
       const isFemale = i % 2 === 1;
@@ -252,9 +261,9 @@ export class SpectatorCrowd {
     nameTag.position.set(0, 2.25, 0);
     charGroup.add(nameTag);
 
-    // 6. 3D Speech Bubble Sprite
+    // 6. 3D Speech Bubble Sprite (Larger & higher for high visibility)
     const speechBubble = this.createSpeechBubbleSprite();
-    speechBubble.position.set(0, 3.02, 0);
+    speechBubble.position.set(0, 3.25, 0);
     speechBubble.scale.set(0.001, 0.001, 0.001);
     charGroup.add(speechBubble);
 
@@ -293,11 +302,18 @@ export class SpectatorCrowd {
     }
 
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 64;
+    canvas.width = 512;
+    canvas.height = 128;
     const ctx = canvas.getContext('2d');
 
-    this.drawNameTagCanvas(ctx, canvas.width, canvas.height, text, false, isFemale);
+    this.drawNameTagCanvas(
+      ctx,
+      canvas.width,
+      canvas.height,
+      text,
+      false,
+      isFemale
+    );
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.minFilter = THREE.LinearFilter;
@@ -309,7 +325,7 @@ export class SpectatorCrowd {
     });
 
     const sprite = new THREE.Sprite(spriteMat);
-    sprite.scale.set(1.8, 0.45, 1.0);
+    sprite.scale.set(2.4, 0.6, 1.0);
     sprite.userData = { canvas, ctx, texture, isFemale };
     return sprite;
   }
@@ -323,8 +339,8 @@ export class SpectatorCrowd {
     }
 
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 128;
+    canvas.width = 1024;
+    canvas.height = 256;
     const ctx = canvas.getContext('2d');
 
     const texture = new THREE.CanvasTexture(canvas);
@@ -348,74 +364,100 @@ export class SpectatorCrowd {
       ctx.fillStyle = 'rgba(245, 158, 11, 0.95)';
       ctx.strokeStyle = '#fde047';
     } else if (isFemale) {
-      ctx.fillStyle = 'rgba(136, 19, 55, 0.88)'; // Gentle rose burgundy for female
+      ctx.fillStyle = 'rgba(136, 19, 55, 0.90)';
       ctx.strokeStyle = '#f472b6';
     } else {
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)'; // Slate dark for male
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.90)';
       ctx.strokeStyle = '#38bdf8';
     }
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 4;
 
     ctx.beginPath();
-    ctx.roundRect(8, 8, width - 16, height - 16, 24);
+    ctx.roundRect(10, 10, width - 20, height - 20, 28);
     ctx.fill();
     ctx.stroke();
 
     ctx.fillStyle = isCelebrating ? '#000000' : '#ffffff';
-    ctx.font = 'bold 24px system-ui, sans-serif';
+    ctx.font = 'bold 38px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(text, width * 0.5, height * 0.5);
   }
 
-  drawSpeechBubbleCanvas(ctx, width, height, text) {
+  drawSpeechBubbleCanvas(ctx, width, height, text, senderName = null) {
     ctx.clearRect(0, 0, width, height);
 
-    const pad = 8;
-    const bodyH = height - 28;
+    const pad = 12;
+    const bodyH = height - 48;
 
-    // High contrast dark frosted bubble body (prevents post-processing bloom washout)
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+    // High contrast dark frosted bubble body (slate dark)
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.96)';
     ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth = 4;
+    ctx.lineWidth = 6;
 
     ctx.beginPath();
-    ctx.roundRect(pad, pad, width - pad * 2, bodyH, 20);
+    ctx.roundRect(pad, pad, width - pad * 2, bodyH, 28);
     ctx.fill();
     ctx.stroke();
 
     // Small speech tail pointing down
     ctx.beginPath();
-    ctx.moveTo(width * 0.5 - 14, pad + bodyH);
-    ctx.lineTo(width * 0.5, height - 4);
-    ctx.lineTo(width * 0.5 + 14, pad + bodyH);
+    ctx.moveTo(width * 0.5 - 20, pad + bodyH);
+    ctx.lineTo(width * 0.5, height - 6);
+    ctx.lineTo(width * 0.5 + 20, pad + bodyH);
     ctx.closePath();
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.96)';
     ctx.fill();
     ctx.strokeStyle = '#38bdf8';
     ctx.stroke();
 
-    // Crisp high-contrast white text (super clear and legible against dark bubble)
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 28px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    let display = text;
-    if (display.length > 28) {
-      display = display.substring(0, 26) + '...';
+    if (senderName) {
+      // Line 1: Sender Name in bright sky cyan
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 36px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      let displayName = senderName;
+      if (displayName.length > 24) {
+        displayName = displayName.substring(0, 22) + '...';
+      }
+      ctx.fillText(displayName, width * 0.5, pad + bodyH * 0.32);
+
+      // Line 2: Comment in bold crisp white
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 50px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      let displayComment = text;
+      if (displayComment.length > 30) {
+        displayComment = displayComment.substring(0, 28) + '...';
+      }
+      ctx.fillText(displayComment, width * 0.5, pad + bodyH * 0.70);
+    } else {
+      // Single line text (e.g. system speech or gift phrase)
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 54px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      let display = text;
+      if (display.length > 32) {
+        display = display.substring(0, 30) + '...';
+      }
+      ctx.fillText(display, width * 0.5, pad + bodyH * 0.5);
     }
-    ctx.fillText(display, width * 0.5, pad + bodyH * 0.5);
   }
 
-  showSpeech(char, text, duration = 3.5) {
+  showSpeech(char, text, duration = 6.0, senderName = null) {
     char.speechTimer = duration;
     const bubble = char.speechBubble;
     if (bubble && bubble.userData.ctx) {
       const { ctx, canvas, texture } = bubble.userData;
-      this.drawSpeechBubbleCanvas(ctx, canvas.width, canvas.height, text);
+      this.drawSpeechBubbleCanvas(
+        ctx,
+        canvas.width,
+        canvas.height,
+        text,
+        senderName
+      );
       texture.needsUpdate = true;
-      bubble.scale.set(2.8, 0.7, 1.0);
+      bubble.scale.set(5.2, 1.3, 1.0);
     }
   }
 
@@ -463,9 +505,9 @@ export class SpectatorCrowd {
       this.updateNameTag(char, cleanName, true);
 
       if (data.comment) {
-        this.showSpeech(char, data.comment, 4.0);
+        this.showSpeech(char, data.comment, 6.0, cleanName);
       } else if (data.giftName) {
-        this.showSpeech(char, 'Tang ' + data.giftName + '!', 3.0);
+        this.showSpeech(char, 'Tang ' + data.giftName + '!', 4.5, cleanName);
       }
     }
   }
@@ -485,7 +527,7 @@ export class SpectatorCrowd {
     char.leftArmGroup.position.y = 1.48;
     char.rightArmGroup.position.y = 1.48;
     char.nameTag.position.y = 2.25;
-    char.speechBubble.position.y = 3.02;
+    char.speechBubble.position.y = 3.25;
     char.group.position.y = char.baseY;
   }
 
@@ -512,7 +554,7 @@ export class SpectatorCrowd {
     char.rightArmGroup.rotation.x = -0.2;
 
     char.nameTag.position.y = 1.55;
-    char.speechBubble.position.y = 2.32;
+    char.speechBubble.position.y = 2.45;
   }
 
   pickRandomWalkTarget(char) {
@@ -526,13 +568,15 @@ export class SpectatorCrowd {
   update(deltaTime) {
     const time = Date.now() * 0.0025;
 
-    this.speechTimer -= deltaTime;
-    if (this.speechTimer <= 0) {
-      this.speechTimer = 5.0 + Math.random() * 6.0;
-      const speaker = this.characters[Math.floor(Math.random() * this.characters.length)];
-      if (speaker && speaker.speechTimer <= 0) {
-        const phrase = SYSTEM_SPEECH_PHRASES[Math.floor(Math.random() * SYSTEM_SPEECH_PHRASES.length)];
-        this.showSpeech(speaker, phrase, 3.5);
+    if (this.enableAutoSpeech) {
+      this.speechTimer -= deltaTime;
+      if (this.speechTimer <= 0) {
+        this.speechTimer = 8.0 + Math.random() * 8.0;
+        const speaker = this.characters[Math.floor(Math.random() * this.characters.length)];
+        if (speaker && speaker.speechTimer <= 0) {
+          const phrase = SYSTEM_SPEECH_PHRASES[Math.floor(Math.random() * SYSTEM_SPEECH_PHRASES.length)];
+          this.showSpeech(speaker, phrase, 3.5);
+        }
       }
     }
 
