@@ -228,7 +228,10 @@ export class InteractionManager {
           this.cameraManager &&
           typeof this.cameraManager.focusThirdPersonOnCharacter === 'function'
         ) {
-          this.cameraManager.focusThirdPersonOnCharacter(char, 6.5);
+          const coins = Number(event.data?.diamondCount || event.data?.diamonds || 1);
+          // 1 coin holds camera 15s (10-20s window); 5+ coins holds 25s for full sequence
+          const cameraHoldDuration = coins >= 5 ? 25.0 : 15.0;
+          this.cameraManager.focusThirdPersonOnCharacter(char, cameraHoldDuration);
         }
       }
 

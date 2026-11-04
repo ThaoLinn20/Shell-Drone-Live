@@ -1,0 +1,584 @@
+[
+  {
+    "time": 0,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 3,
+    "duration": 0.25,
+    "preset": "snow",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "no-trail_hsbcc",
+        "type": "no-trail",
+        "startRatio": 0,
+        "endRatio": 0.2,
+        "start": 0,
+        "end": 2.3
+      },
+      "apex-hang"
+    ],
+    "cometTrail": "none",
+    "uiDuration": 0.9,
+    "y1": 0.2,
+    "y2": 0.3,
+    "pistil": false,
+    "apexHang": true,
+    "apex-hang": true,
+    "color": "gold",
+    "shellSize": 1.2,
+    "particleCountMultiplier": 0.25,
+    "starLifeMultiplier": 5,
+    "secondBurst": {
+      "enabled": false,
+      "childShells": [
+        {
+          "ratio": 0.1,
+          "triggerTiming": 0.5,
+          "distributionMode": "random",
+          "shapeType": "sphere",
+          "dynamicsType": "crysanthemum-trail",
+          "color": "#ffffff",
+          "scale": 0.2,
+          "effects": [
+            "strobe"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "time": 2.4,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 3,
+    "duration": 0.25,
+    "preset": "snow",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "no-trail_hsbcc",
+        "type": "no-trail",
+        "startRatio": 0,
+        "endRatio": 0.2,
+        "start": 0,
+        "end": 2.3
+      },
+      "apex-hang"
+    ],
+    "cometTrail": "none",
+    "uiDuration": 0.9,
+    "y1": 0.2,
+    "y2": 0.3,
+    "pistil": false,
+    "apexHang": true,
+    "apex-hang": true,
+    "color": "gold",
+    "shellSize": 1.2,
+    "particleCountMultiplier": 0.25,
+    "starLifeMultiplier": 5,
+    "secondBurst": {
+      "enabled": false,
+      "childShells": [
+        {
+          "ratio": 0.2,
+          "triggerTiming": 0.5,
+          "distributionMode": "random",
+          "shapeType": "sphere",
+          "dynamicsType": "crysanthemum-trail",
+          "color": "#ffd700",
+          "scale": 0.35,
+          "effects": [
+            "strobe"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "time": 4.8,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 3,
+    "duration": 0.25,
+    "preset": "snow",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "no-trail_hsbcc",
+        "type": "no-trail",
+        "startRatio": 0,
+        "endRatio": 0.2,
+        "start": 0,
+        "end": 2.3
+      },
+      "apex-hang"
+    ],
+    "cometTrail": "none",
+    "uiDuration": 0.9,
+    "y1": 0.2,
+    "y2": 0.3,
+    "pistil": false,
+    "apexHang": true,
+    "apex-hang": true,
+    "color": "gold",
+    "shellSize": 1.2,
+    "particleCountMultiplier": 0.25,
+    "starLifeMultiplier": 5,
+    "secondBurst": {
+      "enabled": false,
+      "childShells": [
+        {
+          "ratio": 0.2,
+          "triggerTiming": 0.5,
+          "distributionMode": "random",
+          "shapeType": "sphere",
+          "dynamicsType": "crysanthemum-trail",
+          "color": "#ffd700",
+          "scale": 0.35,
+          "effects": [
+            "strobe"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "time": 1.1,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 4,
+    "duration": 0.25,
+    "preset": "crysanthemum",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "pistil": false,
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "no-trail_hsbcc",
+        "type": "no-trail",
+        "startRatio": 0,
+        "endRatio": 0.2,
+        "start": 0,
+        "end": 2.3
+      },
+      "apex-hang"
+    ],
+    "cometTrail": "none",
+    "uiDuration": 0.9,
+    "y1": 0.2,
+    "y2": 0.3,
+    "apexHang": true,
+    "apex-hang": true,
+    "color": "white",
+    "shellSize": 1.2,
+    "particleCountMultiplier": 0.25,
+    "starLifeMultiplier": 5,
+    "secondBurst": {
+      "enabled": false,
+      "childShells": [
+        {
+          "ratio": 0.2,
+          "triggerTiming": 0.5,
+          "distributionMode": "random",
+          "shapeType": "sphere",
+          "dynamicsType": "crysanthemum-trail",
+          "color": "#ffd700",
+          "scale": 0.35,
+          "effects": [
+            "strobe"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "time": 3.7,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 4,
+    "duration": 0.25,
+    "preset": "crysanthemum",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "pistil": false,
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "no-trail_hsbcc",
+        "type": "no-trail",
+        "startRatio": 0,
+        "endRatio": 0.2,
+        "start": 0,
+        "end": 2.3
+      },
+      "apex-hang"
+    ],
+    "cometTrail": "none",
+    "uiDuration": 0.9,
+    "y1": 0.2,
+    "y2": 0.3,
+    "apexHang": true,
+    "apex-hang": true,
+    "color": "white",
+    "shellSize": 1.2,
+    "particleCountMultiplier": 0.25,
+    "starLifeMultiplier": 5,
+    "secondBurst": {
+      "enabled": false,
+      "childShells": [
+        {
+          "ratio": 0.2,
+          "triggerTiming": 0.5,
+          "distributionMode": "random",
+          "shapeType": "sphere",
+          "dynamicsType": "crysanthemum-trail",
+          "color": "#ffd700",
+          "scale": 0.35,
+          "effects": [
+            "strobe"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "time": 5.8,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 4,
+    "duration": 0.25,
+    "preset": "crysanthemum",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "pistil": false,
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "no-trail_hsbcc",
+        "type": "no-trail",
+        "startRatio": 0,
+        "endRatio": 0.2,
+        "start": 0,
+        "end": 2.3
+      },
+      "apex-hang"
+    ],
+    "cometTrail": "none",
+    "uiDuration": 0.9,
+    "y1": 0.2,
+    "y2": 0.3,
+    "apexHang": true,
+    "apex-hang": true,
+    "color": "white",
+    "shellSize": 1.2,
+    "particleCountMultiplier": 0.25,
+    "starLifeMultiplier": 5,
+    "secondBurst": {
+      "enabled": false,
+      "childShells": [
+        {
+          "ratio": 0.2,
+          "triggerTiming": 0.5,
+          "distributionMode": "random",
+          "shapeType": "sphere",
+          "dynamicsType": "crysanthemum-trail",
+          "color": "#ffd700",
+          "scale": 0.35,
+          "effects": [
+            "strobe"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "time": 0,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 3,
+    "duration": 0.25,
+    "preset": "snow",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "strobe_kdqpb",
+        "type": "strobe",
+        "startRatio": 0.83,
+        "endRatio": 1,
+        "start": 9.55,
+        "end": 11.5
+      },
+      {
+        "id": "flow_f3v6k",
+        "type": "flow",
+        "startRatio": 0.84,
+        "endRatio": 1,
+        "start": 9.66,
+        "end": 11.5
+      },
+      {
+        "id": "white-strobe_3f54c",
+        "type": "white-strobe",
+        "startRatio": 0,
+        "endRatio": 0.86,
+        "start": 0,
+        "end": 9.89
+      },
+      "apex-hang"
+    ],
+    "cometTrail": "none",
+    "uiDuration": 0.9,
+    "y1": 0.6,
+    "y2": 0.7,
+    "pistil": false,
+    "apexHang": true,
+    "apex-hang": true,
+    "color": "gold",
+    "shellSize": 1.2,
+    "particleCountMultiplier": 0.25,
+    "starLifeMultiplier": 5
+  },
+  {
+    "time": 2.4,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 3,
+    "duration": 0.25,
+    "preset": "snow",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "strobe_kdqpb",
+        "type": "strobe",
+        "startRatio": 0.83,
+        "endRatio": 1,
+        "start": 9.55,
+        "end": 11.5
+      },
+      {
+        "id": "flow_f3v6k",
+        "type": "flow",
+        "startRatio": 0.84,
+        "endRatio": 1,
+        "start": 9.66,
+        "end": 11.5
+      },
+      {
+        "id": "white-strobe_3f54c",
+        "type": "white-strobe",
+        "startRatio": 0,
+        "endRatio": 0.86,
+        "start": 0,
+        "end": 9.89
+      },
+      "apex-hang"
+    ],
+    "cometTrail": "none",
+    "uiDuration": 0.9,
+    "y1": 0.6,
+    "y2": 0.7,
+    "pistil": false,
+    "apexHang": true,
+    "apex-hang": true,
+    "color": "gold",
+    "shellSize": 1.2,
+    "particleCountMultiplier": 0.25,
+    "starLifeMultiplier": 5
+  },
+  {
+    "time": 4.7,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 3,
+    "duration": 0.25,
+    "preset": "snow",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "strobe_kdqpb",
+        "type": "strobe",
+        "startRatio": 0.83,
+        "endRatio": 1,
+        "start": 9.55,
+        "end": 11.5
+      },
+      {
+        "id": "flow_f3v6k",
+        "type": "flow",
+        "startRatio": 0.84,
+        "endRatio": 1,
+        "start": 9.66,
+        "end": 11.5
+      },
+      {
+        "id": "white-strobe_3f54c",
+        "type": "white-strobe",
+        "startRatio": 0,
+        "endRatio": 0.86,
+        "start": 0,
+        "end": 9.89
+      },
+      "apex-hang"
+    ],
+    "cometTrail": "none",
+    "uiDuration": 0.9,
+    "y1": 0.6,
+    "y2": 0.7,
+    "pistil": false,
+    "apexHang": true,
+    "apex-hang": true,
+    "color": "gold",
+    "shellSize": 1.2,
+    "particleCountMultiplier": 0.25,
+    "starLifeMultiplier": 5
+  },
+  {
+    "time": 1.1,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 4,
+    "duration": 0.25,
+    "preset": "crysanthemum",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "pistil": false,
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "strobe_ns6h5",
+        "type": "strobe",
+        "startRatio": 0,
+        "endRatio": 1,
+        "start": 0,
+        "end": 8.5
+      },
+      {
+        "id": "flow_s2eyj",
+        "type": "flow",
+        "startRatio": 0.84,
+        "endRatio": 1,
+        "start": 7.14,
+        "end": 8.5
+      },
+      "apex-hang"
+    ],
+    "cometTrail": "none",
+    "uiDuration": 0.9,
+    "y1": 0.6,
+    "y2": 0.7,
+    "apexHang": true,
+    "apex-hang": true,
+    "color": "white",
+    "shellSize": 1.2,
+    "particleCountMultiplier": 0.25,
+    "starLifeMultiplier": 5
+  },
+  {
+    "time": 3.7,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 4,
+    "duration": 0.25,
+    "preset": "crysanthemum",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "pistil": false,
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "strobe_ns6h5",
+        "type": "strobe",
+        "startRatio": 0,
+        "endRatio": 1,
+        "start": 0,
+        "end": 8.5
+      },
+      {
+        "id": "flow_s2eyj",
+        "type": "flow",
+        "startRatio": 0.84,
+        "endRatio": 1,
+        "start": 7.14,
+        "end": 8.5
+      },
+      "apex-hang"
+    ],
+    "cometTrail": "none",
+    "uiDuration": 0.9,
+    "y1": 0.6,
+    "y2": 0.7,
+    "apexHang": true,
+    "apex-hang": true,
+    "color": "white",
+    "shellSize": 1.2,
+    "particleCountMultiplier": 0.25,
+    "starLifeMultiplier": 5
+  },
+  {
+    "time": 5.8,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 4,
+    "duration": 0.25,
+    "preset": "crysanthemum",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "pistil": false,
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "strobe_ns6h5",
+        "type": "strobe",
+        "startRatio": 0,
+        "endRatio": 1,
+        "start": 0,
+        "end": 8.5
+      },
+      {
+        "id": "flow_s2eyj",
+        "type": "flow",
+        "startRatio": 0.84,
+        "endRatio": 1,
+        "start": 7.14,
+        "end": 8.5
+      },
+      "apex-hang"
+    ],
+    "cometTrail": "none",
+    "uiDuration": 0.9,
+    "y1": 0.6,
+    "y2": 0.7,
+    "apexHang": true,
+    "apex-hang": true,
+    "color": "white",
+    "shellSize": 1.2,
+    "particleCountMultiplier": 0.25,
+    "starLifeMultiplier": 5
+  }
+]

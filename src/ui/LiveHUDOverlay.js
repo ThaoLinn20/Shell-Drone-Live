@@ -10,14 +10,32 @@ export class LiveHUDOverlay {
     this.ambientToggleBtn = null;
     this.interactionManager = options.interactionManager || null;
     this.ambientFireworkManager = options.ambientFireworkManager || null;
+    this.eventBus = options.eventBus || null;
     this.visible = true;
     this.activeBanners = [];
     this.chatContainer = null;
+    this.spotlightBanner = null;
     this.activeChatMessages = [];
     this.statusFadeTimer = null;
     this.currentStatus = 'disconnected';
 
     this.initDOM();
+
+    if (this.eventBus && typeof this.eventBus.on === 'function') {
+      this.eventBus.on('sequence:gift_scheduled', (detail) => {
+        if (detail && detail.giftInfo) {
+          this.showGiftSpotlight(detail.giftInfo);
+        }
+      });
+      this.eventBus.on('sequence:started', (detail) => {
+        if (detail && detail.giftInfo) {
+          this.showGiftSpotlight(detail.giftInfo);
+        }
+      });
+      this.eventBus.on('sequence:ended', () => {
+        this.hideGiftSpotlight();
+      });
+    }
   }
 
   initDOM() {
@@ -87,6 +105,29 @@ export class LiveHUDOverlay {
       }
     });
     this.container.appendChild(this.statusPill);
+
+    // Grand Gift Spotlight Banner (positioned at top center during gifted sequence)
+    this.spotlightBanner = document.createElement('div');
+    this.spotlightBanner.id = 'gift-spotlight-banner';
+    this.spotlightBanner.style.position = 'absolute';
+    this.spotlightBanner.style.top = '32px';
+    this.spotlightBanner.style.left = '50%';
+    this.spotlightBanner.style.transform = 'translateX(-50%) translateY(-20px)';
+    this.spotlightBanner.style.display = 'flex';
+    this.spotlightBanner.style.flexDirection = 'column';
+    this.spotlightBanner.style.alignItems = 'center';
+    this.spotlightBanner.style.gap = '4px';
+    this.spotlightBanner.style.padding = '12px 32px';
+    this.spotlightBanner.style.borderRadius = '24px';
+    this.spotlightBanner.style.background = 'rgba(15, 23, 42, 0.90)';
+    this.spotlightBanner.style.backdropFilter = 'blur(12px)';
+    this.spotlightBanner.style.border = '2px solid rgba(245, 158, 11, 0.8)';
+    this.spotlightBanner.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.6), 0 0 24px rgba(245, 158, 11, 0.45)';
+    this.spotlightBanner.style.opacity = '0';
+    this.spotlightBanner.style.pointerEvents = 'none';
+    this.spotlightBanner.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+    this.spotlightBanner.style.zIndex = '10000';
+    this.container.appendChild(this.spotlightBanner);
 
     // Quick Test Toolbar for streamer (bottom center, hidden by default, toggled via Hotkey or Pill)
     this.createTestToolbar();
@@ -562,6 +603,32 @@ export class LiveHUDOverlay {
       timestamp: Date.now()
     };
     this.interactionManager.handleIncomingEvent(evt);
+  }
+
+  showGiftSpotlight(giftInfo) {
+    if (!this.spotlightBanner || !giftInfo) return;
+    const userName = (giftInfo.userName || 'VIP Supporter').toUpperCase();
+    const giftName = (giftInfo.giftName || 'Special Gift').toUpperCase();
+
+    this.spotlightBanner.innerHTML = `
+      <div style="font-size: 12px; font-weight: 700; color: #fbbf24; letter-spacing: 2px; text-transform: uppercase;">
+        SPECIAL GRAND SHOW DEDICATED TO
+      </div>
+      <div style="font-size: 26px; font-weight: 900; color: #ffffff; text-shadow: 0 0 16px rgba(245, 158, 11, 0.7); letter-spacing: 1px;">
+        ${userName}
+      </div>
+      <div style="font-size: 13px; font-weight: 600; color: #94a3b8; letter-spacing: 1px;">
+        SPONSORED GIFT: <span style="color: #38bdf8;">${giftName}</span>
+      </div>
+    `;
+    this.spotlightBanner.style.opacity = '1';
+    this.spotlightBanner.style.transform = 'translateX(-50%) translateY(0)';
+  }
+
+  hideGiftSpotlight() {
+    if (!this.spotlightBanner) return;
+    this.spotlightBanner.style.opacity = '0';
+    this.spotlightBanner.style.transform = 'translateX(-50%) translateY(-20px)';
   }
 
   simulateChat(comment) {

@@ -1640,6 +1640,12 @@ export class SpectatorCrowd {
       }
       this.standUp(char);
       this.updateNameTag(char, cleanName, true);
+      this.updateShirtPlate(
+        char,
+        cleanName,
+        char.isHonorary ? char.honoraryType : null,
+        data.diamondCount || 0
+      );
 
       if (data.comment) {
         this.showSpeech(char, data.comment, 6.0, cleanName);
@@ -1650,11 +1656,13 @@ export class SpectatorCrowd {
       // If action is a gift, notify camera to focus in third-person view behind this spectator
       const isGift = Boolean(data.giftName || data.diamondCount);
       if (isGift && this.eventBus && typeof this.eventBus.emit === 'function') {
+        const coins = Number(data.diamondCount || data.diamonds || 1);
+        const cameraHoldDuration = coins >= 5 ? 25.0 : 15.0;
         this.eventBus.emit('spectator:focus_third_person', {
           character: char,
           user,
           data,
-          duration: 6.5
+          duration: cameraHoldDuration
         });
       }
     }

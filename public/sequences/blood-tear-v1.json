@@ -1,0 +1,1604 @@
+[
+  {
+    "time": 97.1,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 4,
+    "duration": 0.1,
+    "preset": "crysanthemum",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "pistil": false,
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "no-trail_kjq1c",
+        "type": "no-trail",
+        "startRatio": 0,
+        "endRatio": 0.26,
+        "start": 0,
+        "end": 0.47
+      },
+      {
+        "id": "crossette_oroby",
+        "type": "crossette",
+        "startRatio": 0.65,
+        "endRatio": 1,
+        "start": 1.17,
+        "end": 1.8
+      }
+    ],
+    "cometTrail": "detached",
+    "uiDuration": 1.2,
+    "starLifeMultiplier": 0.8,
+    "particleCountMultiplier": 0.5,
+    "shellSize": 1.1,
+    "y1": 0.2,
+    "y2": 0.2,
+    "secondBurst": {
+      "enabled": false,
+      "childShells": [
+        {
+          "ratio": 0.2,
+          "triggerTiming": 0.5,
+          "distributionMode": "random",
+          "shapeType": "sphere",
+          "dynamicsType": "crysanthemum_discrete_trail",
+          "color": "#ffd700",
+          "scale": 0.35,
+          "effects": [
+            "strobe"
+          ]
+        }
+      ]
+    },
+    "color": "gold"
+  },
+  {
+    "time": 97.6,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 4,
+    "duration": 0.1,
+    "preset": "crysanthemum",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "pistil": false,
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "no-trail_kjq1c",
+        "type": "no-trail",
+        "startRatio": 0,
+        "endRatio": 0.26,
+        "start": 0,
+        "end": 0.47
+      },
+      {
+        "id": "crossette_oroby",
+        "type": "crossette",
+        "startRatio": 0.65,
+        "endRatio": 1,
+        "start": 1.17,
+        "end": 1.8
+      }
+    ],
+    "cometTrail": "detached",
+    "uiDuration": 1.2,
+    "starLifeMultiplier": 0.8,
+    "particleCountMultiplier": 0.5,
+    "shellSize": 1.1,
+    "y1": 0.2,
+    "y2": 0.2,
+    "secondBurst": {
+      "enabled": false,
+      "childShells": [
+        {
+          "ratio": 0.2,
+          "triggerTiming": 0.5,
+          "distributionMode": "random",
+          "shapeType": "sphere",
+          "dynamicsType": "crysanthemum_discrete_trail",
+          "color": "#ffd700",
+          "scale": 0.35,
+          "effects": [
+            "strobe"
+          ]
+        }
+      ]
+    },
+    "color": "gold"
+  },
+  {
+    "time": 98.1,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 4,
+    "duration": 0.1,
+    "preset": "crysanthemum",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "pistil": false,
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "no-trail_kjq1c",
+        "type": "no-trail",
+        "startRatio": 0,
+        "endRatio": 0.26,
+        "start": 0,
+        "end": 0.47
+      },
+      {
+        "id": "crossette_oroby",
+        "type": "crossette",
+        "startRatio": 0.65,
+        "endRatio": 1,
+        "start": 1.17,
+        "end": 1.8
+      }
+    ],
+    "cometTrail": "detached",
+    "uiDuration": 1.2,
+    "starLifeMultiplier": 0.8,
+    "particleCountMultiplier": 0.5,
+    "shellSize": 1.1,
+    "y1": 0.2,
+    "y2": 0.2,
+    "secondBurst": {
+      "enabled": false,
+      "childShells": [
+        {
+          "ratio": 0.2,
+          "triggerTiming": 0.5,
+          "distributionMode": "random",
+          "shapeType": "sphere",
+          "dynamicsType": "crysanthemum_discrete_trail",
+          "color": "#ffd700",
+          "scale": 0.35,
+          "effects": [
+            "strobe"
+          ]
+        }
+      ]
+    },
+    "color": "gold"
+  },
+  {
+    "time": 95.5,
+    "type": "sequence",
+    "pattern": "sweep-custom-curve",
+    "count": 5,
+    "duration": 0.1,
+    "preset": "multi_nested",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "standard",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "detached",
+    "multiNested": true,
+    "pistil": false,
+    "stages": [
+      {
+        "shapeType": "sphere",
+        "dynamicsType": "crossette",
+        "color": "#ffd700",
+        "delay": 0.25,
+        "scale": 1.1,
+        "effects": [
+          "crossette"
+        ]
+      },
+      {
+        "shapeType": "sphere",
+        "dynamicsType": "willow",
+        "color": "#ffffff",
+        "delay": 0,
+        "scale": 0.9,
+        "effects": [
+          "glitter-strobe"
+        ]
+      },
+      {
+        "shapeType": "sphere",
+        "dynamicsType": "ghost-kamuro",
+        "color": "#f7e688",
+        "delay": 0.35,
+        "scale": 1,
+        "effects": [
+          "ghost-flare"
+        ]
+      }
+    ],
+    "wavePoints": [
+      {
+        "x": 0,
+        "y": 0.583,
+        "angle": 0.28
+      },
+      {
+        "x": 0.225,
+        "y": 0.723,
+        "angle": -0.186
+      },
+      {
+        "x": 0.5,
+        "y": 0.88,
+        "angle": 0
+      },
+      {
+        "x": 0.75,
+        "y": 0.661,
+        "angle": 0.134
+      },
+      {
+        "x": 1,
+        "y": 0.517,
+        "angle": -0.054
+      }
+    ],
+    "uiDuration": 2.7,
+    "nestingMode": "concentric",
+    "_selectedTemplateKey": "classic",
+    "color": "white"
+  },
+  {
+    "time": 95.6,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 5,
+    "duration": 0.3,
+    "preset": "crysanthemum",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "pistil": false,
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "detached",
+    "uiDuration": 0.8,
+    "y1": 0.2,
+    "y2": 0.25,
+    "x1": 0.2,
+    "x2": 0.8
+  },
+  {
+    "time": 93.1,
+    "type": "sequence",
+    "pattern": "sweep-custom-curve",
+    "count": 3,
+    "duration": 0.1,
+    "preset": "multi_nested",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "standard",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "detached",
+    "multiNested": true,
+    "pistil": false,
+    "stages": [
+      {
+        "shapeType": "sphere",
+        "dynamicsType": "crossette",
+        "color": "#ffd700",
+        "delay": 0.25,
+        "scale": 1.1,
+        "effects": [
+          "crossette"
+        ]
+      },
+      {
+        "shapeType": "sphere",
+        "dynamicsType": "willow",
+        "color": "#ffffff",
+        "delay": 0,
+        "scale": 0.9,
+        "effects": [
+          "glitter-strobe"
+        ]
+      },
+      {
+        "shapeType": "sphere",
+        "dynamicsType": "ghost-kamuro",
+        "color": "#f7e688",
+        "delay": 0.35,
+        "scale": 1,
+        "effects": [
+          "ghost-flare"
+        ]
+      }
+    ],
+    "wavePoints": [
+      {
+        "x": 0,
+        "y": 0.726,
+        "angle": 0.28
+      },
+      {
+        "x": 0.25,
+        "y": 0.826,
+        "angle": -0.065
+      },
+      {
+        "x": 0.5,
+        "y": 0.88,
+        "angle": 0
+      },
+      {
+        "x": 0.75,
+        "y": 0.79,
+        "angle": 0.344
+      },
+      {
+        "x": 1,
+        "y": 0.667,
+        "angle": -0.28
+      }
+    ],
+    "uiDuration": 2.1,
+    "nestingMode": "concentric",
+    "_selectedTemplateKey": "classic"
+  },
+  {
+    "time": 90.2,
+    "type": "sequence",
+    "pattern": "sweep-custom-curve",
+    "duration": 0.1,
+    "preset": "crysanthemum_spiral",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-spiral",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "detached",
+    "wavePoints": [
+      {
+        "x": 0,
+        "y": 0.4,
+        "angle": -0.359
+      },
+      {
+        "x": 0.28,
+        "y": 0.85,
+        "angle": -0.366
+      },
+      {
+        "x": 0.5,
+        "y": 0.35,
+        "angle": 0
+      },
+      {
+        "x": 0.72,
+        "y": 0.85,
+        "angle": 0.472
+      },
+      {
+        "x": 1,
+        "y": 0.4,
+        "angle": 0.469
+      }
+    ],
+    "uiDuration": 2.7,
+    "pistil": false,
+    "count": 4,
+    "x1": 0.3,
+    "x2": 0.7
+  },
+  {
+    "time": 90.6,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 5,
+    "duration": 0.3,
+    "preset": "crysanthemum",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "pistil": false,
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "detached",
+    "uiDuration": 0.8,
+    "y1": 0.2,
+    "y2": 0.25,
+    "x1": 0.2,
+    "x2": 0.8
+  },
+  {
+    "time": 89.1,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 5,
+    "duration": 0.3,
+    "preset": "crysanthemum",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "pistil": false,
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "detached",
+    "uiDuration": 0.8,
+    "y1": 0.2,
+    "y2": 0.25,
+    "x1": 0.2,
+    "x2": 0.8
+  },
+  {
+    "time": 86.3,
+    "type": "sequence",
+    "pattern": "sweep-custom-curve",
+    "count": 4,
+    "duration": 0.1,
+    "preset": "multi_nested",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "standard",
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "crackle_d0g6x",
+        "type": "crackle",
+        "startRatio": 0.46,
+        "endRatio": 0.86,
+        "start": 1.06,
+        "end": 1.98
+      },
+      {
+        "id": "glitter-strobe_oorkq",
+        "type": "glitter-strobe",
+        "startRatio": 0,
+        "endRatio": 0.4,
+        "start": 0,
+        "end": 0.92
+      },
+      "burst-smoke",
+      "apex-hang"
+    ],
+    "cometTrail": "detached",
+    "wavePoints": [
+      {
+        "x": 0,
+        "y": 0.793,
+        "angle": -0.295
+      },
+      {
+        "x": 0.253,
+        "y": 0.61,
+        "angle": -0.389
+      },
+      {
+        "x": 0.499,
+        "y": 0.882,
+        "angle": 0
+      },
+      {
+        "x": 0.73,
+        "y": 0.558,
+        "angle": 0.083
+      },
+      {
+        "x": 1,
+        "y": 0.9,
+        "angle": 0.212
+      }
+    ],
+    "uiDuration": 1.8,
+    "multiNested": true,
+    "pistil": false,
+    "stages": [
+      {
+        "shapeType": "sphere",
+        "dynamicsType": "standard",
+        "color": "#ff4400",
+        "delay": 0.05,
+        "scale": 1,
+        "effects": [
+          "strobe"
+        ]
+      },
+      {
+        "shapeType": "ring",
+        "dynamicsType": "flow",
+        "color": "#00e5ff",
+        "delay": 0.45,
+        "scale": 0.82,
+        "effects": []
+      },
+      {
+        "shapeType": "sphere",
+        "dynamicsType": "crossette",
+        "color": "#ffd700",
+        "delay": 0.9,
+        "scale": 0.65,
+        "effects": [
+          "crossette"
+        ]
+      },
+      {
+        "shapeType": "sphere",
+        "dynamicsType": "willow",
+        "color": "#ffffff",
+        "delay": 1.35,
+        "scale": 0.5,
+        "effects": [
+          "glitter-strobe"
+        ]
+      }
+    ],
+    "burstSmoke": true,
+    "burst-smoke": true,
+    "apexHang": true,
+    "apex-hang": true,
+    "nestingMode": "concentric",
+    "_selectedTemplateKey": "classic",
+    "color": "green",
+    "y1": 0.6,
+    "y2": 0.7,
+    "x1": 0.4,
+    "x2": 0.6
+  },
+  {
+    "time": 86.9,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 5,
+    "duration": 0.3,
+    "preset": "crysanthemum",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "pistil": false,
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "detached",
+    "uiDuration": 0.8,
+    "y1": 0.2,
+    "y2": 0.25,
+    "x1": 0.2,
+    "x2": 0.8
+  },
+  {
+    "time": 89,
+    "type": "cometsequence",
+    "pattern": "sweep-left",
+    "count": 10,
+    "duration": 0.4,
+    "preset": "comet_cluster_cascade",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "bouquet-comet",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "normal",
+    "uiDuration": 1,
+    "x1": 0.2,
+    "x2": 0.8,
+    "pistil": false,
+    "ratioY": 0.1
+  },
+  {
+    "time": 89.3,
+    "type": "cometsequence",
+    "pattern": "sweep-left",
+    "count": 10,
+    "duration": 0.4,
+    "preset": "comet_cluster_cascade",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "bouquet-comet",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "normal",
+    "uiDuration": 1,
+    "x1": 0.8,
+    "x2": 0.2,
+    "pistil": false,
+    "ratioY": 0.1
+  },
+  {
+    "time": 92.7,
+    "type": "cometsequence",
+    "pattern": "sweep-left",
+    "count": 10,
+    "duration": 0.4,
+    "preset": "comet_cluster_cascade",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "bouquet-comet",
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "ghost-flare_1793674593868_tjxnv",
+        "type": "ghost-flare",
+        "startRatio": 0.1,
+        "endRatio": 0.5,
+        "start": 0.23,
+        "end": 1.15
+      }
+    ],
+    "cometTrail": "normal",
+    "uiDuration": 1,
+    "x1": 1,
+    "x2": 0,
+    "pistil": false,
+    "ratioY": 0.1
+  },
+  {
+    "time": 92.4,
+    "type": "cometsequence",
+    "pattern": "sweep-left",
+    "count": 10,
+    "duration": 0.4,
+    "preset": "comet_cluster_cascade",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "bouquet-comet",
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "ghost-flare_1793674593868_tjxnv",
+        "type": "ghost-flare",
+        "startRatio": 0.1,
+        "endRatio": 0.5,
+        "start": 0.23,
+        "end": 1.15
+      }
+    ],
+    "cometTrail": "normal",
+    "uiDuration": 1,
+    "x1": 0.8,
+    "x2": 0.2,
+    "pistil": false,
+    "ratioY": 0.1,
+    "useAngle": true,
+    "angle": 0
+  },
+  {
+    "time": 92.1,
+    "type": "cometsequence",
+    "pattern": "sweep-left",
+    "count": 10,
+    "duration": 0.4,
+    "preset": "comet_cluster_cascade",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "bouquet-comet",
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "ghost-flare_1793674593868_tjxnv",
+        "type": "ghost-flare",
+        "startRatio": 0.1,
+        "endRatio": 0.5,
+        "start": 0.23,
+        "end": 1.15
+      }
+    ],
+    "cometTrail": "normal",
+    "uiDuration": 1,
+    "x2": 1,
+    "pistil": false,
+    "ratioY": 0.1,
+    "x1": 0
+  },
+  {
+    "time": 95,
+    "type": "cometsequence",
+    "pattern": "vortex-tunnel",
+    "count": 10,
+    "duration": 0.4,
+    "preset": "comet_cluster_notrail",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "standard",
+    "instantBurst": false,
+    "effects": [
+      "no-trail"
+    ],
+    "cometTrail": "normal",
+    "uiDuration": 1,
+    "x1": 0.2,
+    "x2": 0.8,
+    "ratioY": 0.1,
+    "pistil": false
+  },
+  {
+    "time": 95.3,
+    "type": "cometsequence",
+    "pattern": "vortex-tunnel",
+    "count": 10,
+    "duration": 0.4,
+    "preset": "comet_cluster_notrail",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "standard",
+    "instantBurst": false,
+    "effects": [
+      "no-trail"
+    ],
+    "cometTrail": "normal",
+    "uiDuration": 1,
+    "x1": 0.8,
+    "x2": 0.2,
+    "ratioY": 0.1,
+    "pistil": false
+  },
+  {
+    "time": 86.6,
+    "type": "cometsequence",
+    "pattern": "sweep-left",
+    "count": 10,
+    "duration": 0.56,
+    "preset": "comet_single",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "bouquet-comet",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "normal",
+    "uiDuration": 1,
+    "x1": 0.2,
+    "x2": 0.8,
+    "ratioY": 0.1,
+    "pistil": false
+  },
+  {
+    "time": 86.9,
+    "type": "cometsequence",
+    "pattern": "sweep-left",
+    "count": 10,
+    "duration": 0.56,
+    "preset": "comet_single",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "bouquet-comet",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "normal",
+    "uiDuration": 1,
+    "x1": 0.8,
+    "x2": 0.2,
+    "ratioY": 0.1,
+    "pistil": false
+  },
+  {
+    "time": 88.1,
+    "type": "cometsequence",
+    "pattern": "sweep-left",
+    "count": 10,
+    "duration": 0.56,
+    "preset": "falling_comets",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "standard",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "normal",
+    "uiDuration": 1,
+    "x1": 0.25,
+    "x2": 0.75,
+    "ratioY": 0.1,
+    "pistil": false
+  },
+  {
+    "time": 88.4,
+    "type": "cometsequence",
+    "pattern": "sweep-left",
+    "count": 10,
+    "duration": 0.56,
+    "preset": "falling_comets",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "standard",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "normal",
+    "uiDuration": 1,
+    "x1": 0.85,
+    "x2": 0.15,
+    "ratioY": 0.1,
+    "pistil": false
+  },
+  {
+    "time": 90.7,
+    "type": "cometsequence",
+    "pattern": "sweep-left",
+    "count": 10,
+    "duration": 0.56,
+    "preset": "comet_single",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "bouquet-comet",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "normal",
+    "uiDuration": 1,
+    "x1": 0.2,
+    "x2": 0.8,
+    "ratioY": 0.1,
+    "pistil": false
+  },
+  {
+    "time": 91,
+    "type": "cometsequence",
+    "pattern": "sweep-left",
+    "count": 10,
+    "duration": 0.56,
+    "preset": "comet_single",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "bouquet-comet",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "normal",
+    "uiDuration": 1,
+    "x1": 0.8,
+    "x2": 0.2,
+    "ratioY": 0.1,
+    "pistil": false
+  },
+  {
+    "time": 93.9,
+    "type": "cometsequence",
+    "pattern": "sweep-left",
+    "count": 10,
+    "duration": 0.56,
+    "preset": "comet_single",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "bouquet-comet",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "normal",
+    "uiDuration": 1,
+    "x1": 0.2,
+    "x2": 0.8,
+    "ratioY": 0.1,
+    "pistil": false
+  },
+  {
+    "time": 94.2,
+    "type": "cometsequence",
+    "pattern": "sweep-left",
+    "count": 10,
+    "duration": 0.56,
+    "preset": "comet_single",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "bouquet-comet",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "normal",
+    "uiDuration": 1,
+    "x1": 0.8,
+    "x2": 0.2,
+    "ratioY": 0.1,
+    "pistil": false
+  },
+  {
+    "time": 99.1,
+    "type": "cometsequence",
+    "pattern": "sweep-left",
+    "count": 10,
+    "duration": 1,
+    "preset": "comet_cluster_cc",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "bouquet-comet",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "normal",
+    "uiDuration": 1.8,
+    "pistil": false,
+    "ratioY": 0.1,
+    "x1": 0.2,
+    "x2": 0.8
+  },
+  {
+    "time": 101.6,
+    "type": "cometsequence",
+    "pattern": "sweep-left",
+    "count": 10,
+    "duration": 1,
+    "preset": "comet_cluster_cc",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "bouquet-comet",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "normal",
+    "uiDuration": 1.8,
+    "pistil": false,
+    "ratioY": 0.1,
+    "x2": 0.2,
+    "x1": 0.8
+  },
+  {
+    "time": 104.1,
+    "type": "cometsequence",
+    "pattern": "sweep-left",
+    "count": 10,
+    "duration": 1,
+    "preset": "comet_cluster_cc",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "bouquet-comet",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "normal",
+    "uiDuration": 1.8,
+    "pistil": false,
+    "ratioY": 0.1,
+    "useAngle": true,
+    "angle": 0
+  },
+  {
+    "time": 103.9,
+    "type": "cometsequence",
+    "pattern": "sweep-left",
+    "count": 10,
+    "duration": 1,
+    "preset": "comet_cluster_cc",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "bouquet-comet",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "normal",
+    "uiDuration": 1.8,
+    "pistil": false,
+    "ratioY": 0.1,
+    "useAngle": true,
+    "angle": 0.5235987755982988
+  },
+  {
+    "time": 104.3,
+    "type": "cometsequence",
+    "pattern": "sweep-left",
+    "count": 10,
+    "duration": 1,
+    "preset": "comet_cluster_cc",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "bouquet-comet",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "normal",
+    "uiDuration": 1.8,
+    "pistil": false,
+    "ratioY": 0.1,
+    "useAngle": true,
+    "angle": -0.5235987755982988
+  },
+  {
+    "time": 99.1,
+    "type": "sequence",
+    "pattern": "sweep-arc-out",
+    "duration": 0.6,
+    "preset": "fish_v2",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "standard",
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "flow_qdj9c",
+        "type": "flow",
+        "startRatio": 0.1,
+        "endRatio": 0.5,
+        "start": 0.23,
+        "end": 1.15
+      },
+      {
+        "id": "no-trail_5o4md",
+        "type": "no-trail",
+        "startRatio": 0,
+        "endRatio": 0.87,
+        "start": 0,
+        "end": 2
+      },
+      {
+        "id": "strobe_lc2ea",
+        "type": "strobe",
+        "startRatio": 0.49,
+        "endRatio": 1,
+        "start": 1.13,
+        "end": 2.3
+      }
+    ],
+    "cometTrail": "none",
+    "uiDuration": 1.8,
+    "ratioY": 0.1,
+    "x1": 0.2,
+    "x2": 0.8,
+    "pistil": false,
+    "count": 6,
+    "y1": 0.2,
+    "y2": 0.3,
+    "shellSize": 0.9,
+    "particleCountMultiplier": 0.5,
+    "starLifeMultiplier": 1.35,
+    "secondBurstEnabled": true,
+    "secondBurst": {
+      "enabled": true,
+      "childShells": [
+        {
+          "ratio": 0.2,
+          "triggerTiming": 0.5,
+          "distributionMode": "random",
+          "shapeType": "sphere",
+          "dynamicsType": "standard",
+          "color": "#ffd700",
+          "scale": 0.35,
+          "effects": [
+            "strobe"
+          ]
+        }
+      ]
+    },
+    "color": "white"
+  },
+  {
+    "time": 101.6,
+    "type": "sequence",
+    "pattern": "sweep-arc-out",
+    "duration": 0.6,
+    "preset": "fish_v2",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "standard",
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "flow_qdj9c",
+        "type": "flow",
+        "startRatio": 0.1,
+        "endRatio": 0.5,
+        "start": 0.23,
+        "end": 1.15
+      },
+      {
+        "id": "no-trail_5o4md",
+        "type": "no-trail",
+        "startRatio": 0,
+        "endRatio": 0.87,
+        "start": 0,
+        "end": 2
+      },
+      {
+        "id": "strobe_lc2ea",
+        "type": "strobe",
+        "startRatio": 0.49,
+        "endRatio": 1,
+        "start": 1.13,
+        "end": 2.3
+      }
+    ],
+    "cometTrail": "none",
+    "uiDuration": 1.8,
+    "ratioY": 0.1,
+    "x1": 0.8,
+    "x2": 0.2,
+    "pistil": false,
+    "count": 6,
+    "y1": 0.2,
+    "y2": 0.3,
+    "shellSize": 0.9,
+    "particleCountMultiplier": 0.5,
+    "starLifeMultiplier": 1.35,
+    "secondBurstEnabled": true,
+    "secondBurst": {
+      "enabled": true,
+      "childShells": [
+        {
+          "ratio": 0.15,
+          "triggerTiming": 0.5,
+          "distributionMode": "random",
+          "shapeType": "sphere",
+          "dynamicsType": "standard",
+          "color": "#ffd700",
+          "scale": 0.35,
+          "effects": [
+            "strobe"
+          ]
+        }
+      ]
+    },
+    "color": "white"
+  },
+  {
+    "time": 98.8,
+    "type": "sequence",
+    "pattern": "sweep-custom-curve",
+    "count": 3,
+    "duration": 0.1,
+    "preset": "multi_nested",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "standard",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "detached",
+    "multiNested": true,
+    "pistil": false,
+    "stages": [
+      {
+        "shapeType": "sphere_rings",
+        "dynamicsType": "crysanthemum-trail",
+        "color": "#ff3333",
+        "delay": 0,
+        "scale": 1.4,
+        "effects": [
+          "strobe",
+          "no-trail"
+        ]
+      },
+      {
+        "shapeType": "sphere_rings",
+        "dynamicsType": "snow",
+        "color": "#ffd700",
+        "delay": 0,
+        "scale": 0.7,
+        "effects": []
+      }
+    ],
+    "wavePoints": [
+      {
+        "x": 0,
+        "y": 0.835,
+        "angle": -0.23
+      },
+      {
+        "x": 0.257,
+        "y": 0.614,
+        "angle": -0.045
+      },
+      {
+        "x": 0.5,
+        "y": 0.88,
+        "angle": 0
+      },
+      {
+        "x": 0.738,
+        "y": 0.607,
+        "angle": 0.13
+      },
+      {
+        "x": 1,
+        "y": 0.724,
+        "angle": 0.172
+      }
+    ],
+    "uiDuration": 2,
+    "nestingMode": "concentric",
+    "x1": 0.3,
+    "x2": 0.7,
+    "color": "white"
+  },
+  {
+    "time": 101.6,
+    "type": "sequence",
+    "pattern": "sweep-custom-curve",
+    "duration": 0.1,
+    "preset": "multi_nested",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "standard",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "detached",
+    "multiNested": true,
+    "pistil": false,
+    "stages": [
+      {
+        "shapeType": "sphere_rings",
+        "dynamicsType": "bouquet-comet",
+        "color": "#ff3333",
+        "delay": 0,
+        "scale": 1.7,
+        "effects": [
+          "strobe",
+          "no-trail"
+        ]
+      },
+      {
+        "shapeType": "sphere_rings",
+        "dynamicsType": "snow",
+        "color": "#ffd700",
+        "delay": 0,
+        "scale": 0.35,
+        "effects": []
+      },
+      {
+        "shapeType": "heart",
+        "dynamicsType": "galaxy-spin",
+        "color": "#ffd700",
+        "delay": 0,
+        "scale": 2,
+        "effects": [
+          "no-trail"
+        ]
+      }
+    ],
+    "wavePoints": [
+      {
+        "x": 0,
+        "y": 0.793,
+        "angle": -0.124
+      },
+      {
+        "x": 0.285,
+        "y": 0.999,
+        "angle": 0
+      },
+      {
+        "x": 0.471,
+        "y": 0.588,
+        "angle": 0
+      },
+      {
+        "x": 0.71,
+        "y": 1,
+        "angle": 0
+      },
+      {
+        "x": 1,
+        "y": 0.793,
+        "angle": 0.254
+      }
+    ],
+    "uiDuration": 2,
+    "nestingMode": "concentric",
+    "starLifeMultiplier": 2.1,
+    "shellSize": 1.3,
+    "x1": 0.3,
+    "x2": 0.7,
+    "color": "white",
+    "count": 3
+  },
+  {
+    "time": 104.1,
+    "type": "sequence",
+    "pattern": "sweep-custom-curve",
+    "count": 5,
+    "duration": 0.1,
+    "preset": "multi_nested",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "standard",
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "detached",
+    "uiDuration": 2.8,
+    "multiNested": true,
+    "pistil": false,
+    "stages": [
+      {
+        "shapeType": "ring",
+        "dynamicsType": "crysanthemum-spiral-v2",
+        "color": "#007aff",
+        "delay": 0,
+        "scale": 1.45,
+        "effects": [
+          "no-trail"
+        ]
+      },
+      {
+        "shapeType": "ring",
+        "dynamicsType": "crysanthemum-spiral-v2",
+        "color": "#00e5ff",
+        "delay": 0,
+        "scale": 1.45,
+        "effects": [
+          "no-trail"
+        ]
+      },
+      {
+        "shapeType": "sphere",
+        "dynamicsType": "sparkle-trail",
+        "color": "#66bdc7",
+        "delay": 0,
+        "scale": 0.65,
+        "effects": [
+          "flow",
+          "strobe",
+          "erratic-dart"
+        ]
+      }
+    ],
+    "starLifeMultiplier": 2.3,
+    "shellSize": 1.4,
+    "nestingMode": "concentric",
+    "color": "white",
+    "wavePoints": [
+      {
+        "x": 0,
+        "y": 0.665,
+        "angle": -0.119
+      },
+      {
+        "x": 0.25,
+        "y": 0.681,
+        "angle": 0.034
+      },
+      {
+        "x": 0.507,
+        "y": 0.754,
+        "angle": 0
+      },
+      {
+        "x": 0.75,
+        "y": 0.661,
+        "angle": 0.127
+      },
+      {
+        "x": 1,
+        "y": 0.496,
+        "angle": 0.118
+      }
+    ]
+  },
+  {
+    "time": 104.1,
+    "type": "sequence",
+    "pattern": "sweep-arc-out",
+    "duration": 0.6,
+    "preset": "fish_v2",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "standard",
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "flow_qdj9c",
+        "type": "flow",
+        "startRatio": 0.1,
+        "endRatio": 0.5,
+        "start": 0.23,
+        "end": 1.15
+      },
+      {
+        "id": "no-trail_5o4md",
+        "type": "no-trail",
+        "startRatio": 0,
+        "endRatio": 0.87,
+        "start": 0,
+        "end": 2
+      },
+      {
+        "id": "strobe_lc2ea",
+        "type": "strobe",
+        "startRatio": 0.49,
+        "endRatio": 1,
+        "start": 1.13,
+        "end": 2.3
+      }
+    ],
+    "cometTrail": "none",
+    "uiDuration": 1.8,
+    "ratioY": 0.1,
+    "x1": 0.2,
+    "x2": 0.8,
+    "pistil": false,
+    "count": 6,
+    "y1": 0.2,
+    "y2": 0.3,
+    "shellSize": 0.9,
+    "particleCountMultiplier": 0.5,
+    "starLifeMultiplier": 1.35,
+    "secondBurstEnabled": true,
+    "secondBurst": {
+      "enabled": true,
+      "childShells": [
+        {
+          "ratio": 0.2,
+          "triggerTiming": 0.5,
+          "distributionMode": "random",
+          "shapeType": "sphere",
+          "dynamicsType": "standard",
+          "color": "#00e5ff",
+          "scale": 0.35,
+          "effects": [
+            "strobe"
+          ]
+        }
+      ]
+    },
+    "color": "blue"
+  },
+  {
+    "time": 106.6,
+    "type": "sequence",
+    "pattern": "sweep-arc-out",
+    "duration": 0.6,
+    "preset": "fish_v2",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "standard",
+    "instantBurst": false,
+    "effects": [
+      {
+        "id": "flow_qdj9c",
+        "type": "flow",
+        "startRatio": 0.1,
+        "endRatio": 0.5,
+        "start": 0.23,
+        "end": 1.15
+      },
+      {
+        "id": "no-trail_5o4md",
+        "type": "no-trail",
+        "startRatio": 0,
+        "endRatio": 0.87,
+        "start": 0,
+        "end": 2
+      },
+      {
+        "id": "strobe_lc2ea",
+        "type": "strobe",
+        "startRatio": 0.49,
+        "endRatio": 1,
+        "start": 1.13,
+        "end": 2.3
+      }
+    ],
+    "cometTrail": "none",
+    "uiDuration": 1.8,
+    "ratioY": 0.1,
+    "x1": 0.8,
+    "x2": 0.2,
+    "pistil": false,
+    "count": 6,
+    "y1": 0.2,
+    "y2": 0.3,
+    "shellSize": 0.9,
+    "particleCountMultiplier": 0.5,
+    "starLifeMultiplier": 1.35,
+    "secondBurstEnabled": true,
+    "secondBurst": {
+      "enabled": true,
+      "childShells": [
+        {
+          "ratio": 0.15,
+          "triggerTiming": 0.5,
+          "distributionMode": "random",
+          "shapeType": "sphere",
+          "dynamicsType": "crysanthemum-trail",
+          "color": "#00e5ff",
+          "scale": 0.35,
+          "effects": []
+        }
+      ]
+    },
+    "color": "#c0e9f7"
+  },
+  {
+    "time": 0,
+    "type": "audio",
+    "name": "blood_tear_full.mp3",
+    "duration": 245.544,
+    "uiDuration": 245.544,
+    "url": "blood_tear_full.mp3",
+    "_file": {},
+    "beats": [
+      3.92,
+      6.1,
+      8.63,
+      10.17,
+      12.85,
+      14.26,
+      16.44,
+      18.58,
+      19.98,
+      21.4,
+      22.91,
+      24.2,
+      25.54,
+      27.05,
+      30.09,
+      31.32,
+      32.68,
+      33.86,
+      35.2,
+      36.91,
+      38.32,
+      39.75,
+      41.2,
+      42.57,
+      43.91,
+      45.36,
+      46.78,
+      48.2,
+      49.6,
+      51.08,
+      52.5,
+      55.29,
+      56.83,
+      58.11,
+      59.55,
+      60.64,
+      62.32,
+      63.71,
+      65.17,
+      66.59,
+      68.02,
+      69.41,
+      70.78,
+      72.21,
+      73.6,
+      75.05,
+      77.63,
+      80.38,
+      82.97,
+      86.31,
+      87.76,
+      90.18,
+      93.05,
+      95.52,
+      99.06,
+      101.56,
+      104.1,
+      106.81,
+      108.22,
+      109.67,
+      110.39,
+      111.71,
+      113.2,
+      115.63,
+      118.15,
+      121.57,
+      124.2,
+      126.62,
+      129.69,
+      132.94,
+      135.37,
+      138.21,
+      141.05,
+      144.25,
+      146.67,
+      149.28,
+      152.16,
+      155.47,
+      158.47,
+      159.73,
+      161.13,
+      162.53,
+      163.9,
+      165.35,
+      166.7,
+      168.16,
+      169.59,
+      172.46,
+      175.27,
+      178.09,
+      180.93,
+      183.74,
+      186.53,
+      189.4,
+      192.19,
+      195.03,
+      197.84,
+      200.05,
+      202.86,
+      206.01,
+      208.8,
+      211.28,
+      214.78,
+      217.28,
+      220.06,
+      222.58,
+      226.14,
+      228.6,
+      231.36,
+      234.18,
+      237.39
+    ],
+    "volume": 1
+  }
+]

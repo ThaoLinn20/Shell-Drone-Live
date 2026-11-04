@@ -230,7 +230,19 @@ describe('InteractionManager', () => {
     );
     expect(mockCameraManager.focusThirdPersonOnCharacter).toHaveBeenCalledWith(
       mockChar,
-      6.5
+      15.0
+    );
+
+    // If gift is 5+ coins, hold duration should be 25s for the sequence
+    const bigGift = {
+      type: 'gift',
+      user: { name: 'vip_fan', nickname: 'VIP Fan' },
+      data: { giftName: 'Fireworks', diamondCount: 10 }
+    };
+    manager.handleIncomingEvent(bigGift);
+    expect(mockCameraManager.focusThirdPersonOnCharacter).toHaveBeenCalledWith(
+      mockChar,
+      25.0
     );
   });
 

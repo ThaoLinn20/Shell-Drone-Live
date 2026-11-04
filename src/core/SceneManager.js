@@ -13,6 +13,7 @@ import { WorkstationDesk } from '../environment/WorkstationDesk.js';
 import { ViewingDeck } from '../environment/ViewingDeck.js';
 import { BeachShoreline } from '../environment/BeachShoreline.js';
 import { SpectatorCrowd } from '../environment/SpectatorCrowd.js';
+import { DirectorLaptop } from '../environment/DirectorLaptop.js';
 
 export class SceneManager {
   constructor(eventBus = null) {
@@ -106,6 +107,10 @@ export class SceneManager {
     });
     this.instance.add(this.spectatorCrowd.group);
 
+    // Initialize Director Laptop (Màn hình điều khiển kịch bản pháo hoa đặt tại tiền cảnh camera)
+    this.directorLaptop = new DirectorLaptop();
+    this.instance.add(this.directorLaptop.group);
+
     // Subtle ambient light
     this.ambientLight = new THREE.AmbientLight(
       0xffffff,
@@ -186,6 +191,9 @@ export class SceneManager {
     }
     if (this.spectatorCrowd) {
       this.spectatorCrowd.update(deltaTime);
+    }
+    if (this.directorLaptop) {
+      this.directorLaptop.update(deltaTime);
     }
   }
 
@@ -367,6 +375,9 @@ export class SceneManager {
     }
     if (this.workstationDesk) {
       this.workstationDesk.dispose();
+    }
+    if (this.directorLaptop) {
+      this.directorLaptop.dispose();
     }
     for (const unsubscribe of this.eventSubscriptions) {
       unsubscribe();

@@ -21,6 +21,7 @@ import { InteractionManager } from './live/InteractionManager.js';
 import { AmbientFireworkManager } from './live/AmbientFireworkManager.js';
 import { ScriptVariationEngine } from './live/ScriptVariationEngine.js';
 import { LiveHUDOverlay } from './ui/LiveHUDOverlay.js';
+import { SequenceScheduler } from './managers/SequenceScheduler.js';
 import { showScriptLoader } from './loaders/ShowScriptLoader.js';
 import { proceduralShellGenerator } from './factories/ProceduralShellGenerator.js';
 import droneDemoData from '../config/sequences/droneDemo.json';
@@ -154,9 +155,30 @@ const ambientFireworkManager = new AmbientFireworkManager({
 });
 ambientFireworkManager.start();
 
+// Automated Grand Sequence Scheduler with Diegetic Director Laptop
+const sequenceScheduler = new SequenceScheduler({
+  showDirector,
+  ambientFireworkManager,
+  eventBus: globalEventBus,
+  interval: 60.0
+});
+
+if (sceneManager.directorLaptop) {
+  sceneManager.directorLaptop.scheduler = sequenceScheduler;
+}
+
+// Hook TikTok gift events: 5+ coins triggers/queues sequence, 1-4 coins only holds camera
+interactionManager.on('gift', (event) => {
+  const diamonds = Number(event.data?.diamondCount || event.data?.diamonds || 1);
+  if (diamonds >= 5) {
+    sequenceScheduler.onGiftReceived(event);
+  }
+});
+
 const liveHUD = new LiveHUDOverlay({
   interactionManager,
-  ambientFireworkManager
+  ambientFireworkManager,
+  eventBus: globalEventBus
 });
 interactionManager.hud = liveHUD;
 
@@ -175,9 +197,18 @@ hotkeyManager.register('global', 'a', () => {
   }
 });
 
+hotkeyManager.register('global', 's', () => {
+  sequenceScheduler.triggerNow();
+});
+
+hotkeyManager.register('global', 'n', () => {
+  sequenceScheduler.nextSequence();
+});
+
 if (typeof window !== 'undefined') {
   window.interactionManager = interactionManager;
   window.ambientFireworkManager = ambientFireworkManager;
+  window.sequenceScheduler = sequenceScheduler;
   window.scriptVariationEngine = scriptVariationEngine;
   window.liveHUD = liveHUD;
   window.showScriptLoader = showScriptLoader;
@@ -246,6 +277,7 @@ function animate() {
   if (!inputSystem.isPaused()) {
     movementSystem.update(clock.deltaTime);
     showDirector.update(clock.deltaTime);
+    sequenceScheduler.update(clock.deltaTime);
     fireworkSequencer.update(clock.deltaTime);
     droneSequencer.update(clock.deltaTime);
     droneSystem.update(clock.deltaTime);

@@ -66,8 +66,27 @@ export class CameraManager {
           if (detail && detail.character) {
             this.focusThirdPersonOnCharacter(
               detail.character,
-              detail.duration || 6.5
+              detail.duration || 25.0
             );
+          }
+        })
+      );
+      this.eventSubscriptions.push(
+        this.eventBus.on('sequence:ended', () => {
+          if (this.thirdPersonState && this.thirdPersonState.phase === 'holding') {
+            // Settle embers for 1.5s then smoothly return to default framing
+            setTimeout(() => {
+              if (this.thirdPersonState && this.thirdPersonState.phase === 'holding') {
+                this.thirdPersonState.phase = 'returning';
+                this.thirdPersonState.elapsed = 0;
+                this.thirdPersonState.startPos.copy(this.instance.position);
+                const currentDirection = new THREE.Vector3();
+                this.instance.getWorldDirection(currentDirection);
+                this.thirdPersonState.startTarget.copy(
+                  this.instance.position.clone().add(currentDirection.multiplyScalar(200))
+                );
+              }
+            }, 1500);
           }
         })
       );
@@ -332,7 +351,7 @@ export class CameraManager {
     this.isBroadcastLocked = false;
   }
 
-  focusThirdPersonOnCharacter(character, duration = 6.5) {
+  focusThirdPersonOnCharacter(character, duration = 25.0) {
     if (!character || !character.group) {
       return;
     }
