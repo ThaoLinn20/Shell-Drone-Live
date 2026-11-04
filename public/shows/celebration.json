@@ -1,0 +1,48 @@
+[
+  {
+    "time": 0,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 120,
+    "duration": 200,
+    "preset": "crysanthemum",
+    "sectorId": "center",
+    "shapeType": "sphere",
+    "dynamicsType": "crysanthemum-trail",
+    "pistil": false,
+    "instantBurst": false,
+    "effects": [],
+    "cometTrail": "normal"
+  },
+  {
+    "time": 0.5,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 150,
+    "duration": 200,
+    "preset": "heart_ring",
+    "sectorId": "center",
+    "shapeType": "heart",
+    "dynamicsType": "flow",
+    "instantBurst": false,
+    "effects": ["strobe"],
+    "cometTrail": "normal",
+    "pistil": true
+  },
+  {
+    "time": 1.2,
+    "type": "sequence",
+    "pattern": "random",
+    "count": 250,
+    "duration": 300,
+    "preset": "willow_falling_comets",
+    "sectorId": "center",
+    "shapeType": "willow",
+    "dynamicsType": "falling-comets",
+    "instantBurst": true,
+    "effects": ["glitter-strobe"],
+    "cometTrail": "normal",
+    "pistil": false
+  }
+]
+

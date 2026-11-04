@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import * as THREE from 'three';
 import { CameraManager } from '../../src/core/CameraManager.js';
 import { EventBus } from '../../src/core/EventBus.js';
 
@@ -182,5 +183,23 @@ describe('CameraManager', () => {
 
     expect(cameraManager.birdsEyePos.x).toBe(500);
     expect(cameraManager.birdsEyeDriftHeading.x).toBeLessThan(0);
+  });
+
+  it('should lock broadcast view and prevent position or orientation changes', () => {
+    const fixedPos = new THREE.Vector3(0, 7.2, 424);
+    const fixedTarget = new THREE.Vector3(0, 85, 0);
+
+    cameraManager.lockBroadcastView(fixedPos, fixedTarget);
+    expect(cameraManager.isBroadcastLocked).toBe(true);
+    expect(cameraManager.instance.position.x).toBe(0);
+    expect(cameraManager.instance.position.y).toBe(7.2);
+    expect(cameraManager.instance.position.z).toBe(424);
+
+    // WASD input ignored
+    cameraManager.handleWasdInput(1, 1, false, 0.1);
+    cameraManager.update(0.016);
+    expect(cameraManager.instance.position.x).toBe(0);
+    expect(cameraManager.instance.position.y).toBe(7.2);
+    expect(cameraManager.instance.position.z).toBe(424);
   });
 });

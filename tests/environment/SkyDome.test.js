@@ -138,4 +138,23 @@ describe('SkyDome', () => {
     expect(skyDome.moonMesh.scale.x).toBeCloseTo(50 / 85);
     expect(skyDome.moonUniforms.uMoonScale.value).toBeCloseTo(50 / 85);
   });
+
+  it('should support autonomous slow celestial drift for moon and diurnal rotation for stars', () => {
+    expect(skyDome.moonDriftEnabled).toBe(true);
+    const initialMoonX = skyDome.moonGroup.position.x;
+    const initialStarRotY = skyDome.stars.rotation.y;
+
+    // Simulate 10 seconds of time
+    skyDome.update(10.0);
+
+    expect(skyDome.moonGroup.position.x).not.toBe(initialMoonX);
+    expect(skyDome.stars.rotation.y).toBeGreaterThan(initialStarRotY);
+
+    // Toggle drift off
+    skyDome.setMoonDrift(false);
+    expect(skyDome.moonDriftEnabled).toBe(false);
+    const pausedMoonX = skyDome.moonGroup.position.x;
+    skyDome.update(5.0);
+    expect(skyDome.moonGroup.position.x).toBe(pausedMoonX);
+  });
 });

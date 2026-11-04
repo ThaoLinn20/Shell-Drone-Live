@@ -37,7 +37,9 @@ export const renderingConfig = {
     moonPhase: 'full',
     moonPosition: 0.8,
     moonAltitude: 500,
-    moonSize: 85
+    moonSize: 85,
+    moonDriftEnabled: true,
+    moonDriftSpeed: 0.0018
   },
   performance: {
     fpsThreshold: 70,

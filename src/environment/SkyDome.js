@@ -20,6 +20,9 @@ export class SkyDome {
     this.moonPosition = options.moonPosition ?? renderingConfig.sky?.moonPosition ?? 'right';
     this.moonAltitude = options.moonAltitude ?? renderingConfig.sky?.moonAltitude ?? 'mid';
     this.moonSize = options.moonSize ?? renderingConfig.sky?.moonSize ?? 85;
+    this.moonDriftEnabled = options.moonDriftEnabled ?? renderingConfig.sky?.moonDriftEnabled ?? true;
+    this.moonDriftSpeed = options.moonDriftSpeed ?? renderingConfig.sky?.moonDriftSpeed ?? 0.0018;
+    this.moonOrbitalAngle = 0.85;
 
     this.time = 0;
 
@@ -455,6 +458,19 @@ export class SkyDome {
     this.group.add(this.moonLight.target);
   }
 
+  _getInitialOrbitalAngle(pos) {
+    if (typeof pos === 'number') {
+      if (Math.abs(pos) <= 1.0) {
+        return pos * 0.95;
+      }
+      return (pos / 650.0) * 0.95;
+    }
+    if (pos === 'left') return -0.85;
+    if (pos === 'center') return 0.0;
+    if (pos === 'right') return 0.85;
+    return 0.85;
+  }
+
   _updateMoonTransform() {
     let x = 520;
     if (typeof this.moonPosition === 'number') {
@@ -501,6 +517,8 @@ export class SkyDome {
     if (this.moonLight && this.moonGroup) {
       this.moonLight.position.copy(this.moonGroup.position);
     }
+
+    this.moonOrbitalAngle = this._getInitialOrbitalAngle(this.moonPosition);
   }
 
   setMoonPosition(pos) {
@@ -690,6 +708,39 @@ export class SkyDome {
     }
     if (this.starUniforms) {
       this.starUniforms.uTime.value = this.time;
+    }
+
+    // Ultra-slow celestial diurnal rotation of the starfield
+    if (this.stars) {
+      this.stars.rotation.y += deltaTime * 0.00018;
+    }
+
+    // Ultra-slow autonomous celestial drift of the moon across the night sky
+    if (this.moonDriftEnabled && this.moonGroup) {
+      this.moonOrbitalAngle += this.moonDriftSpeed * deltaTime;
+      const sweepAngle = Math.sin(this.moonOrbitalAngle);
+      const currentX = sweepAngle * 540.0;
+
+      const baseAltitude = typeof this.moonAltitude === 'number'
+        ? this.moonAltitude
+        : (this.moonAltitude === 'low' ? 280 : (this.moonAltitude === 'high' ? 720 : 500));
+      const currentY = baseAltitude + Math.cos(sweepAngle * 1.1) * 75.0;
+      const currentZ = -750;
+
+      this.moonGroup.position.set(currentX, currentY, currentZ);
+      if (this.moonMesh) {
+        this.moonMesh.lookAt(0, 0, 0);
+      }
+      if (this.moonLight) {
+        this.moonLight.position.copy(this.moonGroup.position);
+      }
+    }
+  }
+
+  setMoonDrift(enabled = true, speed = 0.0018) {
+    this.moonDriftEnabled = Boolean(enabled);
+    if (speed !== undefined) {
+      this.moonDriftSpeed = Number(speed) || 0.0018;
     }
   }
 

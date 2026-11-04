@@ -48,15 +48,17 @@ if (!isDev) {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 800,
+    width: 540,
+    height: 960,
+    minWidth: 360,
+    minHeight: 640,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
       nodeIntegration: false,
     },
-    title: 'Firework & Drone Show Studio',
-    backgroundColor: '#1a1a1a',
+    title: 'Shell Drone Live - TikTok Interactive',
+    backgroundColor: '#050508',
     icon: path.join(__dirname, '../../public/icon2.ico'),
   });
 
@@ -225,6 +227,35 @@ function createWindow() {
     {
       label: 'Window',
       submenu: [
+        {
+          label: 'TikTok 9:16 Portrait (540 x 960)',
+          click: () => {
+            if (mainWindow) {
+              mainWindow.setSize(540, 960);
+              mainWindow.center();
+            }
+          }
+        },
+        {
+          label: 'TikTok 9:16 HD (1080 x 1920)',
+          click: () => {
+            if (mainWindow) {
+              mainWindow.setSize(1080, 1920);
+              mainWindow.center();
+            }
+          }
+        },
+        {
+          label: 'Landscape 16:9 (1280 x 720)',
+          click: () => {
+            if (mainWindow) {
+              mainWindow.setSize(1280, 720);
+              mainWindow.center();
+            }
+          }
+        },
+        { type: 'separator' },
+        { role: 'togglefullscreen', label: 'Toggle Fullscreen' },
         { role: 'minimize', label: 'Minimize' },
         { role: 'zoom', label: 'Zoom' },
         ...(process.platform === 'darwin' ? [

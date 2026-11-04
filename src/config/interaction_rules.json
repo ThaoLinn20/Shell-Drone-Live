@@ -1,0 +1,136 @@
+{
+  "version": "1.0.0",
+  "name": "Default TikTok Live Interaction Rules",
+  "settings": {
+    "queueIntervalMs": 250,
+    "maxConcurrentShells": 6,
+    "dimSkyOnSuperGift": true,
+    "streakBatchingWindowMs": 400
+  },
+  "rules": [
+    {
+      "id": "rule_gift_rose",
+      "name": "Rose 1 Diamond",
+      "condition": {
+        "type": "gift",
+        "giftName": "Rose"
+      },
+      "action": {
+        "mode": "procedural",
+        "tier": "mini",
+        "shape": "sphere",
+        "color": "#ff1744"
+      },
+      "priority": 1,
+      "rateLimitMs": 100
+    },
+    {
+      "id": "rule_gift_heart",
+      "name": "Finger Heart",
+      "condition": {
+        "type": "gift",
+        "giftName": "Finger Heart"
+      },
+      "action": {
+        "mode": "procedural",
+        "tier": "mini",
+        "shape": "heart",
+        "color": "#ff4081"
+      },
+      "priority": 2,
+      "rateLimitMs": 200
+    },
+    {
+      "id": "rule_gift_confetti",
+      "name": "Confetti 100 Diamonds",
+      "condition": {
+        "type": "gift",
+        "giftName": "Confetti"
+      },
+      "action": {
+        "mode": "volley",
+        "count": 2,
+        "tier": "medium",
+        "dynamics": "crysanthemum-spiral-v2"
+      },
+      "priority": 4,
+      "rateLimitMs": 400
+    },
+    {
+      "id": "rule_gift_fireworks",
+      "name": "Fireworks Box 1088 Diamonds",
+      "condition": {
+        "type": "gift",
+        "giftName": "Fireworks"
+      },
+      "action": {
+        "mode": "volley",
+        "count": 4,
+        "tier": "grand",
+        "dynamics": "willow"
+      },
+      "priority": 7,
+      "rateLimitMs": 800
+    },
+    {
+      "id": "rule_gift_universe",
+      "name": "TikTok Universe 34999 Diamonds",
+      "condition": {
+        "type": "gift",
+        "minDiamonds": 10000
+      },
+      "action": {
+        "mode": "volley",
+        "count": 7,
+        "tier": "super",
+        "dimSky": true
+      },
+      "priority": 10,
+      "rateLimitMs": 1500
+    },
+    {
+      "id": "rule_chat_heart",
+      "name": "Chat Heart Command",
+      "condition": {
+        "type": "chat",
+        "regex": "^!(tim|heart)$"
+      },
+      "action": {
+        "mode": "procedural",
+        "tier": "mini",
+        "shape": "heart",
+        "color": "#ff4081"
+      },
+      "priority": 2
+    },
+    {
+      "id": "rule_chat_star",
+      "name": "Chat Star Command",
+      "condition": {
+        "type": "chat",
+        "regex": "^!(sao|star)$"
+      },
+      "action": {
+        "mode": "procedural",
+        "tier": "mini",
+        "shape": "star",
+        "color": "#ffd700"
+      },
+      "priority": 2
+    },
+    {
+      "id": "rule_chat_firework",
+      "name": "Chat Firework Command",
+      "condition": {
+        "type": "chat",
+        "regex": "^!(phaohoa|firework)$"
+      },
+      "action": {
+        "mode": "procedural",
+        "tier": "medium"
+      },
+      "priority": 3
+    }
+  ]
+}
+

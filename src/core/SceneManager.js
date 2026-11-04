@@ -10,6 +10,8 @@ import { LaunchBarge } from '../environment/LaunchBarge.js';
 import { RiverPropsManager } from '../environment/RiverPropsManager.js';
 import { ControlsBillboard } from '../environment/ControlsBillboard.js';
 import { WorkstationDesk } from '../environment/WorkstationDesk.js';
+import { ViewingDeck } from '../environment/ViewingDeck.js';
+import { SpectatorCrowd } from '../environment/SpectatorCrowd.js';
 
 export class SceneManager {
   constructor(eventBus = null) {
@@ -75,20 +77,30 @@ export class SceneManager {
     });
     this.instance.add(this.waterSurface.mesh);
 
-    // Initialize in-world controls billboard positioned behind spectator (Z = 438, distance 18m)
+    // Initialize in-world controls billboard (hidden in live view)
     this.controlsBillboard = new ControlsBillboard({
       width: 36,
       height: 18,
       position: new THREE.Vector3(0, 9.5, 438)
     });
+    this.controlsBillboard.group.visible = false;
     this.instance.add(this.controlsBillboard.group);
 
-    // Initialize interactive Workstation Desk with Laptop on the right side (X: 3.6, Y: 4.2, Z: 420.5)
+    // Initialize interactive Workstation Desk (hidden in live view)
     this.workstationDesk = new WorkstationDesk({
       position: new THREE.Vector3(3.6, 4.2, 420.5),
       interactionRadius: 3.8
     });
+    this.workstationDesk.group.visible = false;
     this.instance.add(this.workstationDesk.group);
+
+    // Initialize Lakeside Viewing Deck (Sân ngắm pháo hoa nhìn ra hồ)
+    this.viewingDeck = new ViewingDeck();
+    this.instance.add(this.viewingDeck.group);
+
+    // Initialize 3D Spectator Crowd (Các nhân vật của người xem đứng ngắm pháo hoa)
+    this.spectatorCrowd = new SpectatorCrowd();
+    this.instance.add(this.spectatorCrowd.group);
 
     // Subtle ambient light
     this.ambientLight = new THREE.AmbientLight(
@@ -127,6 +139,18 @@ export class SceneManager {
   ) {
     if (this.skyDome) {
       this.skyDome.update(deltaTime);
+      if (this.skyDome.moonDriftEnabled) {
+        const moonPos = this.skyDome.getMoonWorldPosition();
+        if (this.waterSurface) {
+          this.waterSurface.setMoonDirection(moonPos);
+        }
+        if (this.distantMountains) {
+          this.distantMountains.setMoonDirection(
+            moonPos,
+            this.skyDome.moonPhaseValue !== undefined ? this.skyDome.moonPhaseValue : 1.0
+          );
+        }
+      }
     }
     if (this.cloudSystem) {
       this.cloudSystem.update(deltaTime);
@@ -152,6 +176,12 @@ export class SceneManager {
         cameraPos,
         timelineVisible
       );
+    }
+    if (this.viewingDeck) {
+      this.viewingDeck.update(deltaTime);
+    }
+    if (this.spectatorCrowd) {
+      this.spectatorCrowd.update(deltaTime);
     }
   }
 

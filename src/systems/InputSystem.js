@@ -75,12 +75,16 @@ export class InputSystem {
       }
     };
 
+    this.isCameraLocked = false;
     this.presetOptions = this.fireworkSystem?.shellPresetFactory?.getPresetMenuEntries?.() ?? [
       { key: 'random', label: 'Random' }
     ];
     
     // Click to lock cursor
     domElement.addEventListener('click', () => {
+      if (this.isCameraLocked) {
+        return;
+      }
       if (!this.controls.isLocked && !this.paused) {
         this.controls.lock();
       }

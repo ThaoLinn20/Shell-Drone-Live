@@ -1,3 +1,4 @@
+import * as THREE from 'three';
 import { Clock } from './core/Clock.js';
 import { CameraManager } from './core/CameraManager.js';
 import { SceneManager } from './core/SceneManager.js';
@@ -16,6 +17,10 @@ import { ShowDirector } from './directors/ShowDirector.js';
 import { DroneSystem } from './systems/DroneSystem.js';
 import { DroneShowSequencer } from './directors/DroneShowSequencer.js';
 import { TimelineEditor } from './ui/TimelineEditor.js';
+import { InteractionManager } from './live/InteractionManager.js';
+import { LiveHUDOverlay } from './ui/LiveHUDOverlay.js';
+import { showScriptLoader } from './loaders/ShowScriptLoader.js';
+import { proceduralShellGenerator } from './factories/ProceduralShellGenerator.js';
 import droneDemoData from '../config/sequences/droneDemo.json';
 import { PerformanceMonitor } from './core/PerformanceMonitor.js';
 import { renderingConfig } from './config/rendering.js';
@@ -102,7 +107,51 @@ const fireworkSequencer = new FireworkSequencer(fireworkSystem, cometSystem);
 const showDirector = new ShowDirector(fireworkSequencer, fireworkSystem);
 showDirector.droneSequencer = droneSequencer;
 const hotkeyManager = new HotkeyManager();
-const timelineEditor = new TimelineEditor(showDirector, hotkeyManager);
+// Live Mode vs Legacy Editor Toggle
+const urlParams = typeof window !== 'undefined'
+  ? new URLSearchParams(window.location.search)
+  : null;
+const enableLegacyEditor = urlParams && urlParams.get('editor') === 'true';
+const timelineEditor = enableLegacyEditor
+  ? new TimelineEditor(showDirector, hotkeyManager)
+  : null;
+
+if (!enableLegacyEditor) {
+  // Fixed broadcast camera rig: stationary tripod framing distant fireworks over viewing deck
+  cameraManager.lockBroadcastView(
+    new THREE.Vector3(0, 7.2, 424),
+    new THREE.Vector3(0, 85, 0)
+  );
+  inputSystem.isCameraLocked = true;
+  movementSystem.locked = true;
+}
+
+// Initialize Live Stream Interactive Subsystem
+const interactionManager = new InteractionManager({
+  fireworkSystem,
+  cometSystem,
+  sceneManager
+});
+
+const liveHUD = new LiveHUDOverlay({
+  interactionManager
+});
+interactionManager.hud = liveHUD;
+
+// Automatically connect to TikTok Bridge
+interactionManager.connect();
+
+// Register Live Hotkey to toggle Quick Test Bar
+hotkeyManager.register('global', 't', () => {
+  liveHUD.toggleTestToolbar();
+});
+
+if (typeof window !== 'undefined') {
+  window.interactionManager = interactionManager;
+  window.liveHUD = liveHUD;
+  window.showScriptLoader = showScriptLoader;
+  window.proceduralShellGenerator = proceduralShellGenerator;
+}
 
 // The show script loading is now handled in InputSystem
 
@@ -117,24 +166,28 @@ if (inputSystem.settingsContext) {
 
 renderer.instance.domElement.addEventListener('click', () => {
   audioSystem.resume();
-  if (inputSystem.controls.isLocked && !inputSystem.isPaused()) {
+  if (!inputSystem.isPaused()) {
     const preset = inputSystem.getSelectedPreset();
+    const liveOptions = {
+      sectorId: 'center',
+      ratioX: 0.46 + (Math.random() - 0.5) * 0.08,
+      ratioY: 0.20 + (Math.random() - 0.5) * 0.12,
+      effectOverrides: { instantBurst: false }
+    };
     if (preset && preset.type === 'comet_cluster') {
-      cometSystem.launchRandom(preset, { effectOverrides: { instantBurst: false } });
+      cometSystem.launchRandom(preset, liveOptions);
     } else {
-      fireworkSystem.launchRandom(preset, { effectOverrides: { instantBurst: false } });
+      fireworkSystem.launchRandom(preset, liveOptions);
     }
   }
 });
 
-hotkeyManager.register('global', 'shift+y', () => {
-  if (performanceMonitor.overlay) {
-    performanceMonitor.overlay.style.display = performanceMonitor.overlay.style.display === 'none' ? '' : 'none';
-  }
-  if (inputSystem.statusOverlay) {
-    inputSystem.statusOverlay.style.display = inputSystem.statusOverlay.style.display === 'none' ? '' : 'none';
-  }
-});
+if (performanceMonitor.overlay) {
+  performanceMonitor.overlay.style.display = 'none';
+}
+if (inputSystem.statusOverlay) {
+  inputSystem.statusOverlay.style.display = 'none';
+}
 
 hotkeyManager.register('global', 'shift+r', () => {
   cameraManager.resetPosition();

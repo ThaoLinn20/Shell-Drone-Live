@@ -17,6 +17,7 @@ export class MovementSystem {
     this.speedMultiplier = 1.0;
     this.speed = 500.0; // Movement acceleration
     this.friction = 10.0;  // Decrease velocity naturally
+    this.locked = false;
   }
 
   setSpeedMultiplier(multiplier) {
@@ -30,6 +31,10 @@ export class MovementSystem {
   }
 
   update(deltaTime) {
+    if (this.locked || (this.cameraManager && this.cameraManager.isBroadcastLocked)) {
+      return;
+    }
+
     // If in cinematic mode (boat or birds_eye), route WASD directly to camera manager
     if (this.cameraManager && this.cameraManager.mode !== 'free') {
       const dirX = Number(this.input.keys.right) - Number(this.input.keys.left);

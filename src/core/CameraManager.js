@@ -27,6 +27,9 @@ export class CameraManager {
     this.tempVector = new THREE.Vector3();
     this.isShakingApplied = false;
     this.enabled = true;
+    this.isBroadcastLocked = false;
+    this.broadcastPosition = null;
+    this.broadcastTarget = null;
 
     // Camera Perspective Modes: 'free', 'boat', 'birds_eye'
     this.mode = 'free';
@@ -173,6 +176,9 @@ export class CameraManager {
     shift,
     deltaTime
   ) {
+    if (this.isBroadcastLocked) {
+      return;
+    }
     if (dirX !== 0 || dirZ !== 0) {
       this.lastWasdDirection.set(dirX, dirZ).normalize();
     }
@@ -297,9 +303,24 @@ export class CameraManager {
     this.trauma = Math.min(0.70, this.trauma + intensity);
   }
 
+  lockBroadcastView(position = new THREE.Vector3(0, 7.2, 424), target = new THREE.Vector3(0, 85, 0)) {
+    this.isBroadcastLocked = true;
+    this.broadcastPosition = position.clone();
+    this.broadcastTarget = target.clone();
+    this.instance.position.copy(this.broadcastPosition);
+    this.instance.lookAt(this.broadcastTarget);
+  }
+
+  unlockBroadcastView() {
+    this.isBroadcastLocked = false;
+  }
+
   update(deltaTime) {
-    // 1. Perspective Modes Handling
-    if (this.mode === 'boat') {
+    // 0. Fixed Broadcast Tripod Framing
+    if (this.isBroadcastLocked && this.broadcastPosition && this.broadcastTarget) {
+      this.instance.position.copy(this.broadcastPosition);
+      this.instance.lookAt(this.broadcastTarget);
+    } else if (this.mode === 'boat') {
       if (this.sceneManager) {
         if (typeof this.sceneManager.setBoatPassengerPos === 'function') {
           this.sceneManager.setBoatPassengerPos(
