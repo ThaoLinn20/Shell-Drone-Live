@@ -51,11 +51,24 @@ export class CameraManager {
     this.savedFreePosition = new THREE.Vector3(0, 6, 420);
     this.savedFreeRotation = new THREE.Euler(0, 0, 0);
 
+    // Third-person spectator vantage mode (triggered on viewer gift)
+    this.thirdPersonState = null;
+
     this.eventSubscriptions = [];
     if (this.eventBus && typeof this.eventBus.on === 'function') {
       this.eventSubscriptions.push(
         this.eventBus.on('firework:burst', (detail) => {
           this.onBurst(detail);
+        })
+      );
+      this.eventSubscriptions.push(
+        this.eventBus.on('spectator:focus_third_person', (detail) => {
+          if (detail && detail.character) {
+            this.focusThirdPersonOnCharacter(
+              detail.character,
+              detail.duration || 6.5
+            );
+          }
         })
       );
     }
@@ -114,6 +127,7 @@ export class CameraManager {
   }
 
   resetPosition() {
+    this.cancelThirdPersonView();
     if (this.mode === 'free') {
       this.instance.position.set(0, 6, 420);
       this.instance.lookAt(0, 75, 0);
@@ -315,9 +329,207 @@ export class CameraManager {
     this.isBroadcastLocked = false;
   }
 
+  focusThirdPersonOnCharacter(character, duration = 6.5) {
+    if (!character || !character.group) {
+      return;
+    }
+
+    if (character.group.parent) {
+      character.group.parent.updateMatrixWorld(true);
+    }
+    character.group.updateMatrixWorld(true);
+
+    const charWorldPos = new THREE.Vector3();
+    character.group.getWorldPosition(charWorldPos);
+
+    const shoulderOffset = charWorldPos.x >= 0 ? 0.42 : -0.42;
+    const vantagePos = new THREE.Vector3(
+      charWorldPos.x + shoulderOffset,
+      charWorldPos.y + 2.15,
+      charWorldPos.z + 1.8
+    );
+
+    const vantageTarget = new THREE.Vector3(
+      charWorldPos.x * 0.35,
+      80.0,
+      0.0
+    );
+
+    const homePos = this.isBroadcastLocked && this.broadcastPosition
+      ? this.broadcastPosition.clone()
+      : this.savedFreePosition.clone();
+
+    const homeTarget = this.isBroadcastLocked && this.broadcastTarget
+      ? this.broadcastTarget.clone()
+      : this.stageTarget.clone();
+
+    const startPos = this.instance.position.clone();
+    const currentDirection = new THREE.Vector3();
+    this.instance.getWorldDirection(currentDirection);
+    const startTarget = this.instance.position.clone().add(
+      currentDirection.multiplyScalar(200)
+    );
+
+    // Isolate this character and clear all occluding entities
+    if (this.sceneManager?.spectatorCrowd) {
+      this.sceneManager.spectatorCrowd.setThirdPersonFocus(character);
+    }
+    if (this.eventBus && typeof this.eventBus.emit === 'function') {
+      this.eventBus.emit('camera:third_person_focus', {
+        character,
+        active: true
+      });
+    }
+
+    this.thirdPersonState = {
+      character,
+      phase: 'entering',
+      elapsed: 0,
+      transitionDuration: 1.2,
+      holdDuration: Math.max(1.0, duration),
+      returnDuration: 1.4,
+      startPos,
+      startTarget,
+      vantagePos,
+      vantageTarget,
+      homePos,
+      homeTarget
+    };
+  }
+
+  cancelThirdPersonView() {
+    if (this.sceneManager?.spectatorCrowd) {
+      this.sceneManager.spectatorCrowd.setThirdPersonFocus(null);
+    }
+    if (this.eventBus && typeof this.eventBus.emit === 'function') {
+      this.eventBus.emit('camera:third_person_focus', {
+        character: null,
+        active: false
+      });
+    }
+    this.thirdPersonState = null;
+    if (
+      this.isBroadcastLocked &&
+      this.broadcastPosition &&
+      this.broadcastTarget
+    ) {
+      this.instance.position.copy(this.broadcastPosition);
+      this.instance.lookAt(this.broadcastTarget);
+    }
+  }
+
+  updateThirdPersonView(deltaTime) {
+    if (!this.thirdPersonState) {
+      return;
+    }
+
+    const state = this.thirdPersonState;
+    const char = state.character;
+    if (!char || !char.group) {
+      this.cancelThirdPersonView();
+      return;
+    }
+
+    if (char.group.parent) {
+      char.group.parent.updateMatrixWorld(true);
+    }
+    char.group.updateMatrixWorld(true);
+
+    const charWorldPos = new THREE.Vector3();
+    char.group.getWorldPosition(charWorldPos);
+
+    const shoulderOffset = charWorldPos.x >= 0 ? 0.42 : -0.42;
+    const currentVantagePos = new THREE.Vector3(
+      charWorldPos.x + shoulderOffset,
+      charWorldPos.y + 2.15,
+      charWorldPos.z + 1.8
+    );
+    const currentVantageTarget = new THREE.Vector3(
+      charWorldPos.x * 0.35,
+      80.0,
+      0.0
+    );
+
+    state.elapsed += deltaTime;
+
+    if (state.phase === 'entering') {
+      const progress = Math.min(
+        1.0,
+        state.elapsed / state.transitionDuration
+      );
+      const ease = progress * progress * (3.0 - 2.0 * progress);
+
+      this.instance.position.copy(state.startPos).lerp(
+        currentVantagePos,
+        ease
+      );
+
+      const lookTarget = state.startTarget.clone().lerp(
+        currentVantageTarget,
+        ease
+      );
+      this.instance.lookAt(lookTarget);
+
+      if (progress >= 1.0) {
+        state.phase = 'holding';
+        state.elapsed = 0;
+      }
+    } else if (state.phase === 'holding') {
+      this.instance.position.lerp(currentVantagePos, 0.12);
+      this.instance.lookAt(currentVantageTarget);
+
+      if (state.elapsed >= state.holdDuration) {
+        state.phase = 'returning';
+        state.elapsed = 0;
+        state.startPos.copy(this.instance.position);
+        state.startTarget.copy(currentVantageTarget);
+      }
+    } else if (state.phase === 'returning') {
+      const progress = Math.min(
+        1.0,
+        state.elapsed / state.returnDuration
+      );
+      const ease = progress * progress * (3.0 - 2.0 * progress);
+
+      this.instance.position.copy(state.startPos).lerp(
+        state.homePos,
+        ease
+      );
+
+      const lookTarget = state.startTarget.clone().lerp(
+        state.homeTarget,
+        ease
+      );
+      this.instance.lookAt(lookTarget);
+
+      if (progress >= 1.0) {
+        if (this.sceneManager?.spectatorCrowd) {
+          this.sceneManager.spectatorCrowd.setThirdPersonFocus(null);
+        }
+        if (this.eventBus && typeof this.eventBus.emit === 'function') {
+          this.eventBus.emit('camera:third_person_focus', {
+            character: null,
+            active: false
+          });
+        }
+        this.thirdPersonState = null;
+        if (
+          this.isBroadcastLocked &&
+          this.broadcastPosition &&
+          this.broadcastTarget
+        ) {
+          this.instance.position.copy(this.broadcastPosition);
+          this.instance.lookAt(this.broadcastTarget);
+        }
+      }
+    }
+  }
+
   update(deltaTime) {
-    // 0. Fixed Broadcast Tripod Framing
-    if (this.isBroadcastLocked && this.broadcastPosition && this.broadcastTarget) {
+    // 0. Third-Person Spectator Vantage Mode or Fixed Broadcast Tripod Framing
+    if (this.thirdPersonState) {
+      this.updateThirdPersonView(deltaTime);
+    } else if (this.isBroadcastLocked && this.broadcastPosition && this.broadcastTarget) {
       this.instance.position.copy(this.broadcastPosition);
       this.instance.lookAt(this.broadcastTarget);
     } else if (this.mode === 'boat') {
@@ -432,6 +644,7 @@ export class CameraManager {
   }
 
   destroy() {
+    this.cancelThirdPersonView();
     for (const unsubscribe of this.eventSubscriptions) {
       unsubscribe();
     }

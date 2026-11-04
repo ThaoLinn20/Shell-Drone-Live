@@ -91,6 +91,7 @@ const inputSystem = new InputSystem(
   smokeSystem
 );
 cameraManager.sceneManager = sceneManager;
+sceneManager.cameraManager = cameraManager;
 
 const movementSystem = new MovementSystem(
   inputSystem,
@@ -140,6 +141,7 @@ const interactionManager = new InteractionManager({
   fireworkSystem,
   cometSystem,
   sceneManager,
+  cameraManager,
   scriptVariationEngine
 });
 

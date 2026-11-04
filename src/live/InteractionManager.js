@@ -16,6 +16,7 @@ export class InteractionManager {
     this.fireworkSystem = options.fireworkSystem || null;
     this.cometSystem = options.cometSystem || null;
     this.sceneManager = options.sceneManager || null;
+    this.cameraManager = options.cameraManager || options.sceneManager?.cameraManager || null;
     this.hud = options.hud || null;
     this.scriptVariationEngine = options.scriptVariationEngine || null;
     this.useScriptVariation = options.useScriptVariation !== undefined ? options.useScriptVariation : true;
@@ -213,7 +214,14 @@ export class InteractionManager {
         this.hud.notifyGift(event);
       }
       if (this.sceneManager && this.sceneManager.spectatorCrowd) {
-        this.sceneManager.spectatorCrowd.onViewerAction(event.user, event.data);
+        const char = this.sceneManager.spectatorCrowd.onViewerAction(event.user, event.data);
+        if (
+          char &&
+          this.cameraManager &&
+          typeof this.cameraManager.focusThirdPersonOnCharacter === 'function'
+        ) {
+          this.cameraManager.focusThirdPersonOnCharacter(char, 6.5);
+        }
       }
       this.evaluateGiftRules(event);
     } else if (isChat) {

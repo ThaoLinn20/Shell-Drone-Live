@@ -202,4 +202,83 @@ describe('CameraManager', () => {
     expect(cameraManager.instance.position.y).toBe(7.2);
     expect(cameraManager.instance.position.z).toBe(424);
   });
+
+  it('should focus in third-person view behind character when gifted and smoothly return', () => {
+    const fixedPos = new THREE.Vector3(0, 6.2, 421.5);
+    const fixedTarget = new THREE.Vector3(0, 90, 0);
+    cameraManager.lockBroadcastView(fixedPos, fixedTarget);
+
+    const charGroup = new THREE.Group();
+    charGroup.position.set(-2.0, 4.0, 401.0);
+    const mockChar = { group: charGroup };
+
+    cameraManager.focusThirdPersonOnCharacter(mockChar, 2.0);
+
+    expect(cameraManager.thirdPersonState).toBeDefined();
+    expect(cameraManager.thirdPersonState.phase).toBe('entering');
+
+    // Entering transition
+    cameraManager.update(0.6);
+    expect(cameraManager.instance.position.z).toBeLessThan(421.5);
+
+    // Complete entrance to holding phase
+    cameraManager.update(0.7);
+    expect(cameraManager.thirdPersonState.phase).toBe('holding');
+    // Position should be behind spectator (Z around 401.0 + 2.2 = 403.2)
+    expect(cameraManager.instance.position.z).toBeCloseTo(403.2, 0);
+    expect(cameraManager.instance.position.x).toBeLessThan(0);
+
+    // Holding for duration
+    cameraManager.update(2.1);
+    expect(cameraManager.thirdPersonState.phase).toBe('returning');
+
+    // Return to broadcast tripod
+    cameraManager.update(1.5);
+    expect(cameraManager.thirdPersonState).toBeNull();
+    expect(cameraManager.instance.position.z).toBeCloseTo(421.5, 1);
+  });
+
+  it('should support spectator:focus_third_person eventBus trigger', () => {
+    const charGroup = new THREE.Group();
+    charGroup.position.set(1.5, 4.0, 405.0);
+    const mockChar = { group: charGroup };
+
+    eventBus.emit('spectator:focus_third_person', {
+      character: mockChar,
+      duration: 3.0
+    });
+
+    expect(cameraManager.thirdPersonState).toBeDefined();
+    expect(cameraManager.thirdPersonState.character).toBe(mockChar);
+    expect(cameraManager.thirdPersonState.holdDuration).toBe(3.0);
+  });
+
+  it('should cancel third-person view when cancelThirdPersonView is called', () => {
+    const charGroup = new THREE.Group();
+    charGroup.position.set(0, 4.0, 405.0);
+    cameraManager.focusThirdPersonOnCharacter({ group: charGroup });
+
+    expect(cameraManager.thirdPersonState).not.toBeNull();
+    cameraManager.cancelThirdPersonView();
+    expect(cameraManager.thirdPersonState).toBeNull();
+  });
+
+  it('should isolate spectator crowd during third-person view and restore when finished', () => {
+    const focusCalls = [];
+    cameraManager.sceneManager = {
+      spectatorCrowd: {
+        setThirdPersonFocus: (char) => {
+          focusCalls.push(char);
+        }
+      }
+    };
+
+    const mockChar = { group: new THREE.Group() };
+    cameraManager.focusThirdPersonOnCharacter(mockChar, 1.0);
+
+    expect(focusCalls[0]).toBe(mockChar);
+
+    cameraManager.cancelThirdPersonView();
+    expect(focusCalls[focusCalls.length - 1]).toBeNull();
+  });
 });

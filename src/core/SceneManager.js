@@ -99,7 +99,9 @@ export class SceneManager {
     this.instance.add(this.viewingDeck.group);
 
     // Initialize 3D Spectator Crowd (Các nhân vật của người xem đứng ngắm pháo hoa)
-    this.spectatorCrowd = new SpectatorCrowd();
+    this.spectatorCrowd = new SpectatorCrowd({
+      eventBus: this.eventBus
+    });
     this.instance.add(this.spectatorCrowd.group);
 
     // Subtle ambient light

@@ -119,10 +119,19 @@ describe('ViewingDeck and SpectatorCrowd', () => {
 
   it('should support uncluttered crowd and custom slotCount', () => {
     const crowdDefault = new SpectatorCrowd();
-    expect(crowdDefault.characters.length).toBe(2);
+    expect(crowdDefault.characters.length).toBe(10);
 
     const crowdCustom = new SpectatorCrowd({ slotCount: 4 });
     expect(crowdCustom.characters.length).toBe(4);
+  });
+
+  it('should distribute crowd across multi-depth rows from front railing to foreground deck', () => {
+    const crowd = new SpectatorCrowd();
+    expect(crowd.characters.length).toBe(10);
+
+    const zPositions = crowd.characters.map((c) => c.group.position.z);
+    expect(Math.min(...zPositions)).toBeLessThanOrEqual(-13.0);
+    expect(Math.max(...zPositions)).toBeGreaterThanOrEqual(-6.0);
   });
 
   it('should support prominent speech bubbles with sender name', () => {
@@ -131,6 +140,46 @@ describe('ViewingDeck and SpectatorCrowd', () => {
 
     crowd.showSpeech(char, 'Xin chao ca nha!', 6.0, 'ThaoLinh');
     expect(char.speechTimer).toBe(6.0);
+  });
+
+  it('should isolate focused spectator and hide other characters and tags in third-person view', () => {
+    const crowd = new SpectatorCrowd();
+    const targetChar = crowd.characters[2];
+
+    crowd.setThirdPersonFocus(targetChar);
+
+    expect(targetChar.group.visible).toBe(true);
+    expect(targetChar.nameTag.visible).toBe(false);
+    expect(targetChar.speechBubble.visible).toBe(false);
+
+    // Other characters should be hidden so they do not block the view of fireworks
+    for (const char of crowd.characters) {
+      if (char !== targetChar) {
+        expect(char.group.visible).toBe(false);
+        expect(char.nameTag.visible).toBe(false);
+      }
+    }
+
+    // Restore focus
+    crowd.setThirdPersonFocus(null);
+    for (const char of crowd.characters) {
+      expect(char.group.visible).toBe(true);
+      expect(char.nameTag.visible).toBe(true);
+    }
+  });
+
+  it('should prioritize front-row railing slots when a new viewer sends a gift', () => {
+    const crowd = new SpectatorCrowd();
+    const gifterUser = { name: 'super_gifter_123', nickname: 'Super Gifter' };
+
+    const char = crowd.onViewerAction(gifterUser, {
+      giftName: 'Universe',
+      diamondCount: 34999
+    });
+
+    expect(char).toBeDefined();
+    // Should be at front railing (Z <= -13.0)
+    expect(char.group.position.z).toBeLessThanOrEqual(-13.0);
   });
 });
 

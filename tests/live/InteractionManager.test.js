@@ -198,5 +198,40 @@ describe('InteractionManager', () => {
     // Fast-forward or check synchronous behavior
     expect(manager.queue.length).toBe(0);
   });
+
+  it('should trigger camera third-person focus on spectator when a gift event occurs', () => {
+    const mockChar = { group: {} };
+    const mockSpectatorCrowd = {
+      onViewerAction: vi.fn(() => mockChar)
+    };
+    const mockCameraManager = {
+      focusThirdPersonOnCharacter: vi.fn()
+    };
+    const mockSceneManager = {
+      spectatorCrowd: mockSpectatorCrowd
+    };
+
+    const manager = new InteractionManager({
+      sceneManager: mockSceneManager,
+      cameraManager: mockCameraManager
+    });
+
+    const giftEvent = {
+      type: 'gift',
+      user: { name: 'top_fan', nickname: 'Top Fan' },
+      data: { giftName: 'Rose', diamondCount: 1 }
+    };
+
+    manager.handleIncomingEvent(giftEvent);
+
+    expect(mockSpectatorCrowd.onViewerAction).toHaveBeenCalledWith(
+      giftEvent.user,
+      giftEvent.data
+    );
+    expect(mockCameraManager.focusThirdPersonOnCharacter).toHaveBeenCalledWith(
+      mockChar,
+      6.5
+    );
+  });
 });
 
