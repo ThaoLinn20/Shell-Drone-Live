@@ -123,6 +123,27 @@ const httpServer = http.createServer((req, res) => {
               avatar: data.profilePictureUrl || ''
             }
           });
+        } else if (
+          eventType === 'like' ||
+          eventType === 'likes' ||
+          eventType === 'heart' ||
+          data.likeCount !== undefined ||
+          data.totalLikes !== undefined
+        ) {
+          normalized = {
+            type: 'like',
+            user: {
+              id: data.userId || data.uniqueId || 'viewer',
+              name: data.uniqueId || 'viewer',
+              nickname: data.nickname || data.user?.nickname || 'Like Viewer',
+              avatar: data.profilePictureUrl || ''
+            },
+            data: {
+              likeCount: data.likeCount || 1,
+              totalLikes: data.totalLikes || data.totalLikeCount || 1
+            },
+            timestamp: Date.now()
+          };
         }
 
         if (normalized) {
@@ -224,6 +245,8 @@ wss.on('connection', (ws) => {
           liveConnector = null;
         }
         tryConnectTikTokLive(targetUsername);
+      } else if (msg.type || msg.event) {
+        broadcastEvent(msg);
       }
     } catch (_) {}
   });

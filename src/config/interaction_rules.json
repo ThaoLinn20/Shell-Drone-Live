@@ -138,14 +138,12 @@
         "type": "like"
       },
       "action": {
-        "mode": "random_volley",
-        "minCount": 1,
-        "maxCount": 2,
-        "tier": "mini",
-        "shapes": ["heart", "sphere", "star"]
+        "mode": "script_variation",
+        "eventType": "like",
+        "shape": "heart"
       },
       "priority": 1,
-      "rateLimitMs": 350
+      "rateLimitMs": 250
     }
   ]
 }

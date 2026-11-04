@@ -108,6 +108,7 @@ export class ProceduralShellGenerator {
     const shellConfig = {
       type: 'firework',
       shape: shape,
+      shapeRenderMode: (shape === 'heart' || shape === 'ring' || shape === 'star') ? 'outline' : 'standard',
       effect: dynamics,
       color: options.color || palette.primary,
       secondaryColor: palette.secondary,

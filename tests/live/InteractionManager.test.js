@@ -189,9 +189,8 @@ describe('InteractionManager', () => {
     manager.handleIncomingEvent(likeEvent);
     expect(manager.queue.length).toBe(1);
     expect(manager.queue[0].rule.id).toBe('rule_like_tap');
-    expect(manager.queue[0].rule.action.mode).toBe('random_volley');
-    expect(manager.queue[0].rule.action.minCount).toBe(1);
-    expect(manager.queue[0].rule.action.maxCount).toBe(2);
+    expect(manager.queue[0].rule.action.mode).toBe('script_variation');
+    expect(manager.queue[0].rule.action.eventType).toBe('like');
 
     // Process queue
     manager.processQueue();

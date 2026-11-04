@@ -17,6 +17,8 @@ export class InteractionManager {
     this.cometSystem = options.cometSystem || null;
     this.sceneManager = options.sceneManager || null;
     this.hud = options.hud || null;
+    this.scriptVariationEngine = options.scriptVariationEngine || null;
+    this.useScriptVariation = options.useScriptVariation !== undefined ? options.useScriptVariation : true;
 
     this.socket = null;
     this.status = 'disconnected'; // 'disconnected' | 'connecting' | 'connected'
@@ -25,6 +27,9 @@ export class InteractionManager {
     this.reconnectTimer = null;
     this.queueProcessorTimer = null;
     this.lastTriggerTime = new Map();
+
+    // Start queue processor immediately so actions execute even in offline/test/mock mode
+    this.startQueueProcessor();
   }
 
   // Subscribe to internal interaction events (status, gift, chat)
@@ -190,7 +195,19 @@ export class InteractionManager {
       }
     }
 
-    if (eventType === 'gift') {
+    const isGift = eventType === 'gift' || Boolean(event.data?.giftName || event.data?.giftId);
+    const isChat = eventType === 'chat' || Boolean(event.data?.comment || event.data?.message);
+    const isLike = eventType === 'like'
+      || eventType === 'likes'
+      || eventType === 'heart'
+      || Boolean(
+        event.data?.likeCount !== undefined ||
+        event.data?.totalLikes !== undefined ||
+        event.data?.totalLikeCount !== undefined
+      );
+
+    if (isGift) {
+      event.type = 'gift';
       this.emit('gift', event);
       if (this.hud && typeof this.hud.notifyGift === 'function') {
         this.hud.notifyGift(event);
@@ -199,7 +216,8 @@ export class InteractionManager {
         this.sceneManager.spectatorCrowd.onViewerAction(event.user, event.data);
       }
       this.evaluateGiftRules(event);
-    } else if (eventType === 'chat') {
+    } else if (isChat) {
+      event.type = 'chat';
       this.emit('chat', event);
       if (this.hud && typeof this.hud.notifyChat === 'function') {
         this.hud.notifyChat(event);
@@ -208,7 +226,8 @@ export class InteractionManager {
         this.sceneManager.spectatorCrowd.onViewerAction(event.user, event.data);
       }
       this.evaluateChatRules(event);
-    } else if (eventType === 'like') {
+    } else if (isLike) {
+      event.type = 'like';
       this.emit('like', event);
       if (this.hud && typeof this.hud.notifyLike === 'function') {
         this.hud.notifyLike(event);
@@ -234,15 +253,17 @@ export class InteractionManager {
         id: 'rule_like_default',
         name: 'Default Like Rule',
         condition: { type: 'like' },
-        action: {
-          mode: 'random_volley',
-          minCount: 1,
-          maxCount: 2,
-          tier: 'mini',
-          shapes: ['heart', 'sphere', 'star']
-        },
+        action: this.scriptVariationEngine && this.useScriptVariation
+          ? { mode: 'script_variation', eventType: 'like' }
+          : {
+              mode: 'random_volley',
+              minCount: 1,
+              maxCount: 2,
+              tier: 'mini',
+              shapes: ['heart', 'sphere', 'star']
+            },
         priority: 1,
-        rateLimitMs: 350
+        rateLimitMs: 300
       };
     }
 
@@ -273,10 +294,12 @@ export class InteractionManager {
       matchedRule = {
         id: 'fallback_gift',
         priority: diamondCount >= 500 ? 5 : 2,
-        action: {
-          mode: 'procedural',
-          tier: diamondCount >= 1000 ? 'grand' : diamondCount >= 100 ? 'medium' : 'mini'
-        }
+        action: this.scriptVariationEngine && this.useScriptVariation
+          ? { mode: 'script_variation', eventType: 'gift', diamondCount }
+          : {
+              mode: 'procedural',
+              tier: diamondCount >= 1000 ? 'grand' : diamondCount >= 100 ? 'medium' : 'mini'
+            }
       };
     }
 
@@ -287,6 +310,7 @@ export class InteractionManager {
     const comment = (event.data?.comment || '').trim();
     if (!comment) return;
 
+    let matched = false;
     for (const rule of this.rules) {
       if (rule.condition.type !== 'chat') continue;
 
@@ -294,13 +318,27 @@ export class InteractionManager {
         const reg = new RegExp(rule.condition.regex, 'i');
         if (reg.test(comment)) {
           this.enqueueAction(rule, event, 1);
+          matched = true;
           break;
         }
       }
     }
+
+    if (!matched && this.scriptVariationEngine && this.useScriptVariation) {
+      const defaultChatRule = {
+        id: 'rule_chat_default_variation',
+        name: 'Default Chat Variation',
+        condition: { type: 'chat' },
+        action: { mode: 'script_variation', eventType: 'comment' },
+        priority: 2,
+        rateLimitMs: 350
+      };
+      this.enqueueAction(defaultChatRule, event, 1);
+    }
   }
 
   enqueueAction(rule, sourceEvent, count = 1) {
+    this.startQueueProcessor();
     // Check rate limit if defined
     if (rule.rateLimitMs) {
       const now = Date.now();
@@ -352,6 +390,12 @@ export class InteractionManager {
 
   executeAction(action, event, count = 1) {
     if (!this.fireworkSystem) return;
+
+    if (this.scriptVariationEngine && (action.mode === 'script_variation' || this.useScriptVariation)) {
+      const eventType = action.eventType || (event?.type === 'chat' ? 'comment' : (event?.type || 'like'));
+      this.scriptVariationEngine.execute(eventType, event, action);
+      return;
+    }
 
     if (action.mode === 'random_volley') {
       const minCount = action.minCount || 1;

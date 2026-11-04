@@ -19,6 +19,7 @@ import { DroneShowSequencer } from './directors/DroneShowSequencer.js';
 import { TimelineEditor } from './ui/TimelineEditor.js';
 import { InteractionManager } from './live/InteractionManager.js';
 import { AmbientFireworkManager } from './live/AmbientFireworkManager.js';
+import { ScriptVariationEngine } from './live/ScriptVariationEngine.js';
 import { LiveHUDOverlay } from './ui/LiveHUDOverlay.js';
 import { showScriptLoader } from './loaders/ShowScriptLoader.js';
 import { proceduralShellGenerator } from './factories/ProceduralShellGenerator.js';
@@ -127,11 +128,19 @@ if (!enableLegacyEditor) {
   movementSystem.locked = true;
 }
 
+// Script variation engine with pre-designed templates from shell-scripts
+const scriptVariationEngine = new ScriptVariationEngine({
+  fireworkSystem,
+  fireworkSequencer,
+  cometSystem
+});
+
 // Initialize Live Stream Interactive Subsystem
 const interactionManager = new InteractionManager({
   fireworkSystem,
   cometSystem,
-  sceneManager
+  sceneManager,
+  scriptVariationEngine
 });
 
 // Autonomous low-altitude ambient firework launcher
@@ -166,6 +175,7 @@ hotkeyManager.register('global', 'a', () => {
 if (typeof window !== 'undefined') {
   window.interactionManager = interactionManager;
   window.ambientFireworkManager = ambientFireworkManager;
+  window.scriptVariationEngine = scriptVariationEngine;
   window.liveHUD = liveHUD;
   window.showScriptLoader = showScriptLoader;
   window.proceduralShellGenerator = proceduralShellGenerator;

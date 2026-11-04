@@ -264,12 +264,12 @@ export class BurstShapeGenerator {
         heartRotation = {
           x: (Math.random() - 0.5) * 0.3,
           y: (Math.random() - 0.5) * 0.3,
-          z: Math.random() * Math.PI * 2
+          z: (Math.random() - 0.5) * 0.20
         };
         if (preset) preset.heartRotation = heartRotation;
       }
 
-      const isOutline = preset?.shapeRenderMode === 'outline';
+      const isOutline = preset?.shapeRenderMode === 'outline' || !preset?.shapeRenderMode;
 
       let t;
       if (isOutline) {
@@ -320,7 +320,7 @@ export class BurstShapeGenerator {
 
     if (shape === 'ring') {
       const isDoubleRing = Boolean(preset?.doubleRing);
-      const isOutline = preset?.shapeRenderMode === 'outline';
+      const isOutline = preset?.shapeRenderMode === 'outline' || !preset?.shapeRenderMode;
       const isJupiter = preset?.shapeRenderMode === 'jupiter';
       const ringBand = 0.78; // Cùng bán kính
       const contourThickness = Math.max(0.01, preset?.outlineThickness ?? (isOutline ? 0.03 : 0.06));
@@ -376,7 +376,7 @@ export class BurstShapeGenerator {
         starRotation = {
           x: (Math.random() - 0.5) * 0.3,
           y: (Math.random() - 0.5) * 0.3,
-          z: Math.random() * Math.PI * 2
+          z: (Math.random() - 0.5) * 0.20
         };
         if (preset) preset.starRotation = starRotation;
       }

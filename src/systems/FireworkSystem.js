@@ -2150,11 +2150,13 @@ export class FireworkSystem {
         if (particleShape === 'willow-arch' || particleShape === 'willow-up') {
           direction = rawDir.applyQuaternion(burstYawQuat);
         } else {
-          direction = rawDir.applyQuaternion(burstRotation);
+          direction = particleShape === 'heart'
+            ? rawDir.clone()
+            : rawDir.applyQuaternion(burstRotation);
         }
       }
 
-      const useContourMagnitude = (!isCoreParticle && ringPreset?.shapeRenderMode === 'outline' && (particleShape === 'ring' || particleShape === 'heart' || particleShape === 'star')) || (particleShape === 'half-flash') || (particleShape === 'split-flash') || (particleShape === 'galaxy') || (particleShape === 'egg') || (particleShape === 'sphere_rings');
+      const useContourMagnitude = (!isCoreParticle && (ringPreset?.shapeRenderMode === 'outline' || particleShape === 'heart' || particleShape === 'star') && (particleShape === 'ring' || particleShape === 'heart' || particleShape === 'star')) || (particleShape === 'half-flash') || (particleShape === 'split-flash') || (particleShape === 'galaxy') || (particleShape === 'egg') || (particleShape === 'sphere_rings');
       if (!useContourMagnitude) {
         direction.normalize();
       }
@@ -2180,7 +2182,9 @@ export class FireworkSystem {
           preset?.shellType === 'ringV2' ||
           preset?.shellType === 'ring_v2'
         ) {
-          speedVariance = 0.015; // Cả ring v1 và ring v2 đều giữ dạng tròn hoàn hảo, không bị biến dạng
+          speedVariance = 0.015;
+        } else if (particleShape === 'heart') {
+          speedVariance = 0.04;
         }
         const outlineSpeedBand = 1.0 + (Math.random() - 0.5) * speedVariance;
         baseSpeed = profileBaseSpeed * outlineSpeedBand;
