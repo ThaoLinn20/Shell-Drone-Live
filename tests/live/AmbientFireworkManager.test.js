@@ -59,6 +59,7 @@ describe('AmbientFireworkManager', () => {
   it('should trigger ambient bursts with small particle budget at low altitude', () => {
     const manager = new AmbientFireworkManager({
       fireworkSystem: mockFireworkSystem,
+      bigShellChance: 0,
       enabled: true
     });
 
@@ -84,6 +85,44 @@ describe('AmbientFireworkManager', () => {
       expect(firstLaunch.shell.burst.particleCount).toBeGreaterThanOrEqual(80);
       expect(firstLaunch.shell.burst.particleCount).toBeLessThanOrEqual(150);
     }
+  });
+
+  it('should trigger grand high-altitude bursts when big shell branch rolls', () => {
+    const manager = new AmbientFireworkManager({
+      fireworkSystem: mockFireworkSystem,
+      bigShellChance: 1.0,
+      enabled: true
+    });
+
+    manager.triggerAmbientBurst();
+    vi.advanceTimersByTime(2000);
+
+    expect(mockFireworkSystem.launchRandom).toHaveBeenCalled();
+    expect(launchedShells.length).toBeGreaterThanOrEqual(3);
+    expect(launchedShells.length).toBeLessThanOrEqual(4);
+
+    const firstLaunch = launchedShells[0];
+    expect(firstLaunch.opts.sectorId).toBe('center');
+    expect(firstLaunch.opts.ratioY).toBeGreaterThanOrEqual(0.55);
+    expect(firstLaunch.opts.ratioY).toBeLessThanOrEqual(0.78);
+    expect(firstLaunch.shell.tier).toBe('grand');
+  });
+
+  it('should delegate to scriptVariationEngine if provided for big shells', () => {
+    const mockEngine = {
+      execute: vi.fn()
+    };
+    const manager = new AmbientFireworkManager({
+      fireworkSystem: mockFireworkSystem,
+      scriptVariationEngine: mockEngine,
+      bigShellChance: 1.0,
+      enabled: true
+    });
+
+    manager.triggerAmbientBurst();
+    expect(mockEngine.execute).toHaveBeenCalledWith('gift', {
+      data: { comboCount: 1 }
+    });
   });
 
   it('should yield and not launch ambient fireworks when interactionManager queue is active', () => {

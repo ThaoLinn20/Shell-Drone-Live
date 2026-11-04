@@ -1,5 +1,5 @@
 // Ambient Firework Manager
-// Autonomous low-altitude background firework launcher for live streaming atmosphere
+// Autonomous background firework launcher for live streaming atmosphere
 
 import { proceduralShellGenerator } from '../factories/ProceduralShellGenerator.js';
 
@@ -7,13 +7,19 @@ export class AmbientFireworkManager {
   constructor(options = {}) {
     this.fireworkSystem = options.fireworkSystem || null;
     this.interactionManager = options.interactionManager || null;
+    this.scriptVariationEngine = options.scriptVariationEngine || null;
     this.enabled = options.enabled !== undefined ? options.enabled : true;
 
     // Timing configuration (random interval between min and max)
     this.minIntervalMs = options.minIntervalMs || 4000;
     this.maxIntervalMs = options.maxIntervalMs || 7500;
 
-    // Low-altitude parameters (strictly clamped to lower background sky)
+    // Big shell probability for heightened viewer excitement (50% big shells)
+    this.bigShellChance = options.bigShellChance !== undefined
+      ? options.bigShellChance
+      : 0.50;
+
+    // Low-altitude parameters (clamped to lower background sky)
     this.baseRatioY = options.baseRatioY || 0.34;
     this.jitterY = options.jitterY || 0.12;
     this.baseRatioX = options.baseRatioX || 0.50;
@@ -62,7 +68,8 @@ export class AmbientFireworkManager {
   }
 
   tick() {
-    if (!this.enabled || !this.fireworkSystem) return;
+    if (!this.enabled) return;
+    if (!this.fireworkSystem && !this.scriptVariationEngine) return;
 
     // If user gift queue is active or busy, pause ambient burst to prioritize viewer gifts
     if (
@@ -77,23 +84,67 @@ export class AmbientFireworkManager {
   }
 
   triggerAmbientBurst() {
-    if (!this.fireworkSystem) return;
+    if (!this.fireworkSystem && !this.scriptVariationEngine) return;
 
-    // 80% chance of 1 single mini shell, 20% chance of a gentle twin volley
+    const isBigShell = Math.random() < this.bigShellChance;
+
+    if (isBigShell) {
+      if (this.scriptVariationEngine) {
+        this.scriptVariationEngine.execute('gift', {
+          data: { comboCount: 1 }
+        });
+        return;
+      }
+
+      // Standalone grand / medium shell volley for high atmosphere excitement (3 to 4 shells)
+      const count = Math.floor(Math.random() * 2 + 3);
+      const grandShapes = [
+        'sphere',
+        'chrysanthemum',
+        'willow',
+        'brocade',
+        'flower'
+      ];
+
+      for (let i = 0; i < count; i++) {
+        const chosenShape = grandShapes[
+          Math.floor(Math.random() * grandShapes.length)
+        ];
+        const shell = proceduralShellGenerator.generate({
+          tier: 'grand',
+          shape: chosenShape,
+          dynamics: Math.random() < 0.5 ? 'willow' : 'standard'
+        });
+
+        const delayMs = i * Math.floor(Math.random() * 400 + 250);
+        setTimeout(() => {
+          this.launchHighAltitudeShell(shell);
+        }, delayMs);
+      }
+      return;
+    }
+
+    // Low-altitude mini shell branch
     const count = Math.random() < 0.20 ? 2 : 1;
-
-    // Curated gentle shapes for subtle ambient aesthetic
-    const gentleShapes = ['sphere', 'flower', 'ring', 'sparking', 'heart'];
+    const gentleShapes = [
+      'sphere',
+      'flower',
+      'ring',
+      'sparking',
+      'heart'
+    ];
 
     for (let i = 0; i < count; i++) {
-      const chosenShape = gentleShapes[Math.floor(Math.random() * gentleShapes.length)];
+      const chosenShape = gentleShapes[
+        Math.floor(Math.random() * gentleShapes.length)
+      ];
       const shell = proceduralShellGenerator.generate({
         tier: 'mini',
         shape: chosenShape,
         dynamics: Math.random() < 0.5 ? 'standard' : 'flow'
       });
 
-      // Scale to small, elegant particle budget (80-150 particles)
+      // Small particle budget for ambient subtle aesthetics
       if (shell.burst && shell.burst.particleCount) {
         shell.burst.particleCount = Math.floor(Math.random() * 70 + 80);
       }
@@ -105,17 +156,54 @@ export class AmbientFireworkManager {
     }
   }
 
+  launchHighAltitudeShell(shellConfig) {
+    if (!this.fireworkSystem) return;
+
+    // Clamped strictly within mid-to-high visible sky (0.55 to 0.78 ratioY)
+    const ratioY = Math.max(
+      0.55,
+      Math.min(
+        0.78,
+        0.65 + (Math.random() - 0.5) * 0.20
+      )
+    );
+
+    // Natural horizontal dispersion framed strictly within camera field of view
+    const ratioX = Math.max(
+      0.22,
+      Math.min(
+        0.78,
+        this.baseRatioX + (Math.random() - 0.5) * this.spreadX
+      )
+    );
+
+    this.fireworkSystem.launchRandom(shellConfig, {
+      sectorId: 'center',
+      ratioX,
+      ratioY
+    });
+  }
+
   launchLowAltitudeShell(shellConfig) {
     if (!this.fireworkSystem) return;
 
     // Clamped strictly to low-altitude sky (0.24 to 0.42 ratioY)
     const ratioY = Math.max(
       0.24,
-      Math.min(0.42, this.baseRatioY + (Math.random() - 0.5) * this.jitterY)
+      Math.min(
+        0.42,
+        this.baseRatioY + (Math.random() - 0.5) * this.jitterY
+      )
     );
 
-    // Natural horizontal dispersion across the central river
-    const ratioX = this.baseRatioX + (Math.random() - 0.5) * this.spreadX;
+    // Natural horizontal dispersion across the central river framed within view
+    const ratioX = Math.max(
+      0.22,
+      Math.min(
+        0.78,
+        this.baseRatioX + (Math.random() - 0.5) * this.spreadX
+      )
+    );
 
     this.fireworkSystem.launchRandom(shellConfig, {
       sectorId: 'center',
@@ -124,4 +212,3 @@ export class AmbientFireworkManager {
     });
   }
 }
-

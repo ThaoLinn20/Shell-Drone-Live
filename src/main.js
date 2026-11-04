@@ -143,10 +143,11 @@ const interactionManager = new InteractionManager({
   scriptVariationEngine
 });
 
-// Autonomous low-altitude ambient firework launcher
+// Autonomous ambient firework launcher
 const ambientFireworkManager = new AmbientFireworkManager({
   fireworkSystem,
   interactionManager,
+  scriptVariationEngine,
   enabled: true
 });
 ambientFireworkManager.start();
