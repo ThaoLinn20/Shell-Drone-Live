@@ -81,7 +81,7 @@ export const SYSTEM_SPEECH_PHRASES = [
   'Ai trộm tiền t rồi!',
   'Cháy quá bạn ơi!',
   'Đẹp mê ly luôn!',
-  'Bắn tiếp đi idol!',
+  'Bắn tiếp đi!',
   'Góc này view đỉnh chóp!',
   'Team FWA Community điểm danh!',
   'Tuyệt phẩm luôn!',
@@ -93,7 +93,54 @@ export const SYSTEM_SPEECH_PHRASES = [
   'Chill phết nhờ!',
   '10 điểm không có nhưng!',
   'Tham gia FWA Community nào!',
+  'Kiếm người yêu!',
+  'FWA Community trên Facebook nhé!',
+  'FWA là gì thế? là Firework Art nha!',
+  'Cộng đồng pháo hoa nghệ thuật Việt Nam',
+  'Này do FWA Community thiết kế à?',
+  'Đúng rồi!'
 ];
+
+export const SYSTEM_SPEECH_AUDIO = {
+  'Pháo hoa đẹp quá!': '01-phao-hoa-dep-qua.mp3',
+  'Tim để bắn pháo!': '02-tim-de-ban-phao.mp3',
+  'Welcome!': '03-welcome.mp3',
+  'Thả tim cho pháo hoa đi!': '04-tha-tim-cho-phao-hoa-di.mp3',
+  'Nhớ Follow nha!': '05-nho-follow-nha.mp3',
+  'Không đánh nhau!': '06-khong-danh-nhau.mp3',
+  'Đừng chen lấn xô đẩy!': '07-dung-chen-lan-xo-day.mp3',
+  'Yêu màu hường ghét màu xám!': '08-yeu-mau-huong-ghet-mau-xam.mp3',
+  'Cần bán mèo!': '09-can-ban-meo.mp3',
+  'FWA Community!': null,
+  'Tải ngay FDShowStudio nào!': '11-tai-ngay-fdshowstudio-nao.mp3',
+  'Hello!': '12-hello.mp3',
+  'Có giao thừa không!': '13-co-giao-thua-khong.mp3',
+  'Xin vía!': '14-xin-via.mp3',
+  'Oh no!': null,
+  'Trời!': null,
+  'Lạnh quá!': null,
+  'Ai trộm tiền t rồi!': null,
+  'Cháy quá bạn ơi!': '19-chay-qua-ban-oi.mp3',
+  'Đẹp mê ly luôn!': '20-dep-me-ly-luon.mp3',
+  'Bắn tiếp đi!': '21-ban-tiep-di.mp3',
+  'Góc này view đỉnh chóp!': '22-goc-nay-view-dinh-chop.mp3',
+  'Team FWA Community điểm danh!': '23-team-fwa-community-diem-danh.mp3',
+  'Tuyệt phẩm luôn!': '24-tuyet-pham-luon.mp3',
+  'Mãn nhãn thật sự!': '25-man-nhan-that-su.mp3',
+  'Hiệu ứng đỉnh quá!': '26-hieu-ung-dinh-qua.mp3',
+  'Cứu tôi, đẹp xỉu!': '27-cuu-toi-dep-xiu.mp3',
+  'U là trời!': '28-u-la-troi.mp3',
+  'Bão tim đê anh em!': '29-bao-tim-de-anh-em.mp3',
+  'Chill phết nhờ!': '30-chill-phet-nho.mp3',
+  '10 điểm không có nhưng!': '31-10-diem-khong-co-nhung.mp3',
+  'Tham gia FWA Community nào!': '32-tham-gia-fwa-community-nao.mp3',
+  'Kiếm người yêu!': '33-kiem-nguoi-yeu.mp3',
+  'FWA Community trên Facebook nhé!': '34-fwa-community-tren-facebook-nhe.mp3',
+  'FWA là gì thế? là Firework Art nha!': '35-fwa-la-gi-the-la-firework-art-nha.mp3',
+  'Cộng đồng pháo hoa nghệ thuật Việt Nam': '36-cong-dong-phao-hoa-nghe-thuat-viet-nam.mp3',
+  'Này do FWA Community thiết kế à?': '37-nay-do-fwa-community-thiet-ke-a.mp3',
+  'Đúng rồi!': '38-dung-roi.mp3'
+};
 
 export class SpectatorCrowd {
   constructor(options = {}) {
@@ -104,6 +151,11 @@ export class SpectatorCrowd {
     this.speechTimer = options.speechTimer || 1.2;
     this.speechInterval = options.speechInterval || 2.8;
     this.enableAutoSpeech = options.enableAutoSpeech !== undefined ? options.enableAutoSpeech : true;
+    this.speechAudioEnabled = options.speechAudioEnabled !== undefined ? options.speechAudioEnabled : true;
+    this.speechAudioBaseURL = options.speechAudioBaseURL || './audio/speakers/';
+    this.speechVolume = options.speechVolume !== undefined ? options.speechVolume : 0.65;
+    this.audioPool = new Map();
+    this.currentSpeechAudio = null;
     this.pendingReplyTimer = 0;
     this.seatSwapCooldown = 50.0 + Math.random() * 30.0;
     this.multiDepthSlots = [];
@@ -176,6 +228,17 @@ export class SpectatorCrowd {
   }
 
   destroy() {
+    if (this.currentSpeechAudio) {
+      try {
+        this.currentSpeechAudio.pause();
+        this.currentSpeechAudio.currentTime = 0;
+      } catch (e) {
+        // Safe audio pause cleanup
+      }
+      this.currentSpeechAudio = null;
+    }
+    this.audioPool.clear();
+
     for (const unsub of this.eventSubscriptions) {
       unsub();
     }
@@ -1343,6 +1406,43 @@ export class SpectatorCrowd {
     }
   }
 
+  playSpeechAudio(text) {
+    if (!this.speechAudioEnabled || typeof Audio === 'undefined') {
+      return;
+    }
+
+    const fileName = SYSTEM_SPEECH_AUDIO[text];
+    if (!fileName) {
+      return;
+    }
+
+    try {
+      if (this.currentSpeechAudio) {
+        this.currentSpeechAudio.pause();
+        this.currentSpeechAudio.currentTime = 0;
+      }
+
+      let audio = this.audioPool.get(fileName);
+      if (!audio) {
+        const audioSrc = `${this.speechAudioBaseURL}${fileName}`;
+        audio = new Audio(audioSrc);
+        this.audioPool.set(fileName, audio);
+      }
+
+      audio.volume = this.speechVolume;
+      audio.currentTime = 0;
+      const playPromise = audio.play();
+      if (playPromise !== undefined && typeof playPromise.catch === 'function') {
+        playPromise.catch(() => {
+          // Gracefully suppress browser autoplay restrictions
+        });
+      }
+      this.currentSpeechAudio = audio;
+    } catch (err) {
+      // Audio playback safety guard
+    }
+  }
+
   showSpeech(char, text, duration = 6.0, senderName = null) {
     char.speechTimer = duration;
     const bubble = char.speechBubble;
@@ -1358,6 +1458,7 @@ export class SpectatorCrowd {
       texture.needsUpdate = true;
       bubble.scale.set(5.2, 1.3, 1.0);
     }
+    this.playSpeechAudio(text);
   }
 
   updateNameTag(char, newName, isCelebrating = false) {
@@ -1967,6 +2068,17 @@ export class SpectatorCrowd {
   }
 
   dispose() {
+    if (this.currentSpeechAudio) {
+      try {
+        this.currentSpeechAudio.pause();
+        this.currentSpeechAudio.currentTime = 0;
+      } catch (e) {
+        // Safe audio pause cleanup
+      }
+      this.currentSpeechAudio = null;
+    }
+    this.audioPool.clear();
+
     if (Array.isArray(this.disposables)) {
       for (const item of this.disposables) {
         if (item && typeof item.dispose === 'function') {

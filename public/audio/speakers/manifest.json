@@ -1,0 +1,233 @@
+[
+  {
+    "index": 0,
+    "phrase": "Pháo hoa đẹp quá!",
+    "file": "01-phao-hoa-dep-qua.mp3",
+    "start": 10.75,
+    "end": 11.85
+  },
+  {
+    "index": 1,
+    "phrase": "Tim để bắn pháo!",
+    "file": "02-tim-de-ban-phao.mp3",
+    "start": 11.86,
+    "end": 12.94
+  },
+  {
+    "index": 2,
+    "phrase": "Welcome!",
+    "file": "03-welcome.mp3",
+    "start": 12.95,
+    "end": 13.7
+  },
+  {
+    "index": 3,
+    "phrase": "Thả tim cho pháo hoa đi!",
+    "file": "04-tha-tim-cho-phao-hoa-di.mp3",
+    "start": 13.71,
+    "end": 15.11
+  },
+  {
+    "index": 4,
+    "phrase": "Nhớ Follow nha!",
+    "file": "05-nho-follow-nha.mp3",
+    "start": 15.12,
+    "end": 16.27
+  },
+  {
+    "index": 5,
+    "phrase": "Không đánh nhau!",
+    "file": "06-khong-danh-nhau.mp3",
+    "start": 16.28,
+    "end": 17.16
+  },
+  {
+    "index": 6,
+    "phrase": "Đừng chen lấn xô đẩy!",
+    "file": "07-dung-chen-lan-xo-day.mp3",
+    "start": 17.17,
+    "end": 18.48
+  },
+  {
+    "index": 7,
+    "phrase": "Yêu màu hường ghét màu xám!",
+    "file": "08-yeu-mau-huong-ghet-mau-xam.mp3",
+    "start": 18.49,
+    "end": 19.9
+  },
+  {
+    "index": 8,
+    "phrase": "Cần bán mèo!",
+    "file": "09-can-ban-meo.mp3",
+    "start": 19.91,
+    "end": 20.76
+  },
+  {
+    "index": 10,
+    "phrase": "Tải ngay FDShowStudio nào!",
+    "file": "11-tai-ngay-fdshowstudio-nao.mp3",
+    "start": 5.94,
+    "end": 7.82
+  },
+  {
+    "index": 11,
+    "phrase": "Hello!",
+    "file": "12-hello.mp3",
+    "start": 7.84,
+    "end": 8.65
+  },
+  {
+    "index": 12,
+    "phrase": "Có giao thừa không!",
+    "file": "13-co-giao-thua-khong.mp3",
+    "start": 20.77,
+    "end": 21.84
+  },
+  {
+    "index": 13,
+    "phrase": "Xin vía!",
+    "file": "14-xin-via.mp3",
+    "start": 21.85,
+    "end": 22.7
+  },
+  {
+    "index": 18,
+    "phrase": "Cháy quá bạn ơi!",
+    "file": "19-chay-qua-ban-oi.mp3",
+    "start": 0.12,
+    "end": 1.48
+  },
+  {
+    "index": 19,
+    "phrase": "Đẹp mê ly luôn!",
+    "file": "20-dep-me-ly-luon.mp3",
+    "start": 1.58,
+    "end": 2.8
+  },
+  {
+    "index": 20,
+    "phrase": "Bắn tiếp đi!",
+    "file": "21-ban-tiep-di.mp3",
+    "start": 2.85,
+    "end": 3.8
+  },
+  {
+    "index": 21,
+    "phrase": "Góc này view đỉnh chóp!",
+    "file": "22-goc-nay-view-dinh-chop.mp3",
+    "start": 3.84,
+    "end": 5.17
+  },
+  {
+    "index": 22,
+    "phrase": "Team FWA Community điểm danh!",
+    "file": "23-team-fwa-community-diem-danh.mp3",
+    "start": 22.76,
+    "end": 25.28
+  },
+  {
+    "index": 23,
+    "phrase": "Tuyệt phẩm luôn!",
+    "file": "24-tuyet-pham-luon.mp3",
+    "start": 25.29,
+    "end": 26.12
+  },
+  {
+    "index": 24,
+    "phrase": "Mãn nhãn thật sự!",
+    "file": "25-man-nhan-that-su.mp3",
+    "start": 26.13,
+    "end": 27.15
+  },
+  {
+    "index": 25,
+    "phrase": "Hiệu ứng đỉnh quá!",
+    "file": "26-hieu-ung-dinh-qua.mp3",
+    "start": 27.16,
+    "end": 28.2
+  },
+  {
+    "index": 26,
+    "phrase": "Cứu tôi, đẹp xỉu!",
+    "file": "27-cuu-toi-dep-xiu.mp3",
+    "start": 28.21,
+    "end": 29.4
+  },
+  {
+    "index": 27,
+    "phrase": "U là trời!",
+    "file": "28-u-la-troi.mp3",
+    "start": 29.41,
+    "end": 30.28
+  },
+  {
+    "index": 28,
+    "phrase": "Bão tim đê anh em!",
+    "file": "29-bao-tim-de-anh-em.mp3",
+    "start": 30.29,
+    "end": 31.4
+  },
+  {
+    "index": 29,
+    "phrase": "Chill phết nhờ!",
+    "file": "30-chill-phet-nho.mp3",
+    "start": 31.41,
+    "end": 32.46
+  },
+  {
+    "index": 30,
+    "phrase": "10 điểm không có nhưng!",
+    "file": "31-10-diem-khong-co-nhung.mp3",
+    "start": 32.7,
+    "end": 34.19
+  },
+  {
+    "index": 31,
+    "phrase": "Tham gia FWA Community nào!",
+    "file": "32-tham-gia-fwa-community-nao.mp3",
+    "start": 34.2,
+    "end": 36.55
+  },
+  {
+    "index": 32,
+    "phrase": "Kiếm người yêu!",
+    "file": "33-kiem-nguoi-yeu.mp3",
+    "start": 36.68,
+    "end": 37.65
+  },
+  {
+    "index": 33,
+    "phrase": "FWA Community trên Facebook nhé!",
+    "file": "34-fwa-community-tren-facebook-nhe.mp3",
+    "start": 37.69,
+    "end": 40.35
+  },
+  {
+    "index": 34,
+    "phrase": "FWA là gì thế? là Firework Art nha!",
+    "file": "35-fwa-la-gi-the-la-firework-art-nha.mp3",
+    "start": 40.5,
+    "end": 44.08
+  },
+  {
+    "index": 35,
+    "phrase": "Cộng đồng pháo hoa nghệ thuật Việt Nam",
+    "file": "36-cong-dong-phao-hoa-nghe-thuat-viet-nam.mp3",
+    "start": 44.09,
+    "end": 46.23
+  },
+  {
+    "index": 36,
+    "phrase": "Này do FWA Community thiết kế à?",
+    "file": "37-nay-do-fwa-community-thiet-ke-a.mp3",
+    "start": 46.28,
+    "end": 49.32
+  },
+  {
+    "index": 37,
+    "phrase": "Đúng rồi!",
+    "file": "38-dung-roi.mp3",
+    "start": 49.33,
+    "end": 50.15
+  }
+]

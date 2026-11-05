@@ -1,7 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import * as THREE from 'three';
 import { ViewingDeck } from '../../src/environment/ViewingDeck.js';
-import { SpectatorCrowd } from '../../src/environment/SpectatorCrowd.js';
+import {
+  SpectatorCrowd,
+  SYSTEM_SPEECH_PHRASES,
+  SYSTEM_SPEECH_AUDIO
+} from '../../src/environment/SpectatorCrowd.js';
 
 describe('ViewingDeck and SpectatorCrowd', () => {
   it('should create ViewingDeck with deck floor, railing, and lanterns', () => {
@@ -229,6 +233,67 @@ describe('ViewingDeck and SpectatorCrowd', () => {
     walkingChar.group.position.copy(walkingChar.targetPos);
     crowd.update(0.1);
     expect(walkingChar.state).toBe('sitting');
+  });
+
+  it('should map SYSTEM_SPEECH_PHRASES to audio files in SYSTEM_SPEECH_AUDIO correctly', () => {
+    expect(SYSTEM_SPEECH_AUDIO).toBeDefined();
+    for (const phrase of SYSTEM_SPEECH_PHRASES) {
+      expect(SYSTEM_SPEECH_AUDIO).toHaveProperty(phrase);
+    }
+
+    expect(SYSTEM_SPEECH_AUDIO['Pháo hoa đẹp quá!']).toBe('01-phao-hoa-dep-qua.mp3');
+    expect(SYSTEM_SPEECH_AUDIO['Tim để bắn pháo!']).toBe('02-tim-de-ban-phao.mp3');
+    expect(SYSTEM_SPEECH_AUDIO['FWA Community!']).toBeNull();
+  });
+
+  it('should play and pool speech audio when Audio global exists', () => {
+    const playMock = vi.fn().mockResolvedValue(undefined);
+    const pauseMock = vi.fn();
+
+    class MockAudio {
+      constructor(src) {
+        this.src = src;
+        this.volume = 1.0;
+        this.currentTime = 0;
+        this.play = playMock;
+        this.pause = pauseMock;
+      }
+    }
+
+    const originalAudio = global.Audio;
+    global.Audio = MockAudio;
+
+    try {
+      const crowd = new SpectatorCrowd({
+        speechVolume: 0.7
+      });
+
+      // Show speech with a valid audio phrase
+      const char = crowd.characters[0];
+      crowd.showSpeech(char, 'Pháo hoa đẹp quá!');
+
+      expect(crowd.audioPool.has('01-phao-hoa-dep-qua.mp3')).toBe(true);
+      const audioInstance = crowd.audioPool.get('01-phao-hoa-dep-qua.mp3');
+      expect(audioInstance.src).toContain('01-phao-hoa-dep-qua.mp3');
+      expect(audioInstance.volume).toBe(0.7);
+      expect(playMock).toHaveBeenCalled();
+
+      // Trigger second phrase to verify previous audio is paused
+      crowd.showSpeech(char, 'Tim để bắn pháo!');
+      expect(pauseMock).toHaveBeenCalled();
+      expect(crowd.audioPool.has('02-tim-de-ban-phao.mp3')).toBe(true);
+
+      // Trigger phrase with null audio
+      crowd.showSpeech(char, 'FWA Community!');
+      // Should not throw or crash
+
+      // Verify dispose cleans up audio
+      crowd.dispose();
+      expect(crowd.audioPool.size).toBe(0);
+      expect(crowd.currentSpeechAudio).toBeNull();
+    } finally {
+      global.Audio = originalAudio;
+    }
   });
 });
 
