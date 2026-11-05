@@ -1,3 +1,8 @@
+import empressV1 from '../../shell-scripts/sequences/empress-v1.json';
+import hanabiV1 from '../../shell-scripts/sequences/hanabi-v1.json';
+import kiepsauvanlanguoivietnamV1 from '../../shell-scripts/sequences/kiepsauvanlanguoivietnam-v1.json';
+import monodyV1 from '../../shell-scripts/sequences/monody-v1.json';
+import yourNameV1 from '../../shell-scripts/sequences/your-name-v1.json';
 import bloodTearV1 from '../../shell-scripts/sequences/blood-tear-v1.json';
 import bloodTearV2 from '../../shell-scripts/sequences/blood-tear-v2.json';
 import bloodTearV3 from '../../shell-scripts/sequences/blood-tear-v3.json';
@@ -56,14 +61,62 @@ export const DEFAULT_SEQUENCES = [
     duration: 12.0,
     interval: 60.0,
     cues: snowSequence
+  },
+  {
+    id: 'empress_v1',
+    title: 'Empress V1',
+    category: 'Vocal EDM Hanabi Sequence',
+    audioTrack: 'empress-full.mp3',
+    duration: 61.0,
+    interval: 60.0,
+    cues: empressV1
+  },
+  {
+    id: 'hanabi_v1',
+    title: 'Hanabi V1',
+    category: 'Vocal EDM Hanabi Sequence',
+    audioTrack: 'hanabi.mp3',
+    duration: 42.0,
+    interval: 60.0,
+    cues: hanabiV1
+  },
+  {
+    id: 'kiepsauvanlanguoivietnam_v1',
+    title: 'Kiepsauvanlanguoivietnam V1',
+    category: 'Vocal EDM Hanabi Sequence',
+    audioTrack: 'kiepsauvanlanguoivietnam.mp3',
+    duration: 49.0,
+    interval: 60.0,
+    cues: kiepsauvanlanguoivietnamV1
+  },
+  {
+    id: 'monody_v1',
+    title: 'Monody V1',
+    category: 'Vocal EDM Hanabi Sequence',
+    audioTrack: 'monody-Orchestra.mp3',
+    duration: 22.0,
+    interval: 60.0,
+    cues: monodyV1
+  },
+  {
+    id: 'your_name_v1',
+    title: 'Your Name V1',
+    category: 'Vocal EDM Hanabi Sequence',
+    audioTrack: 'yournamev21.mp3',
+    duration: 55.0,
+    interval: 60.0,
+    cues: yourNameV1
   }
 ];
 
 export const GIFT_TIER_MAPPING = [
-  { minCoins: 100, sequenceId: 'blood_tear_v4', title: 'Grand Finale Drop' },
-  { minCoins: 50, sequenceId: 'blood_tear_v3', title: 'Build-up Surge' },
-  { minCoins: 20, sequenceId: 'blood_tear_v2', title: 'Melodic Bridge' },
-  { minCoins: 10, sequenceId: 'blood_tear_v1', title: 'First Drop' },
+  { minCoins: 199, sequenceId: 'blood_tear_v4', title: 'Blood Tear - Grand Finale Drop' },
+  { minCoins: 149, sequenceId: 'blood_tear_v3', title: 'Blood Tear - Build-up Surge' },
+  { minCoins: 100, sequenceId: 'empress_v1', title: 'Empress V1' },
+  { minCoins: 88, sequenceId: 'kiepsauvanlanguoivietnam_v1', title: 'Kiepsauvanlanguoivietnam V1' },
+  { minCoins: 30, sequenceId: 'hanabi_v1', title: 'Hanabi V1' },
+  { minCoins: 20, sequenceId: 'your_name_v1', title: 'Your Name V1' },
+  { minCoins: 10, sequenceId: 'monody_v1', title: 'Monody V1' },
   { minCoins: 5, mode: 'random', title: 'Random Sequence' }
 ];
 
@@ -214,31 +267,42 @@ export class SequenceScheduler {
   }
 
   /**
-   * Resolve sequence index based on coin tier and consecutive series rotation:
-   * 5 - 9 coins: random sequence
-   * 10 coins: blood_tear_v1 (First Drop)
-   * 20 coins: blood_tear_v2 (Melodic Bridge)
-   * 50 coins: blood_tear_v3 (Build-up Surge)
-   * 100+ coins: blood_tear_v4 (Grand Finale Drop)
+   * Resolve sequence index purely based on exact TikTok coin amount tiers:
+   * - 5 to 9 coins (Finger Heart): Random sequence from playlist
+   * - 10 to 19 coins (Rose Bloom): monody_v1
+   * - 20 to 29 coins (Shy Peach): your_name_v1
+   * - 30 to 87 coins (Donut): hanabi_v1
+   * - 88 to 99 coins (Takoyaki): kiepsauvanlanguoivietnam_v1
+   * - 100 to 148 coins (Glowing Heart): empress_v1
+   * - 149 to 198 coins (Purple Metallic Heart): blood_tear_v3
+   * - 199+ coins (Double Neon Heart): blood_tear_v4
    *
    * If gifts for the same series arrive consecutively within 90s,
    * automatically rotates version: v1 -> v2 -> v3 -> v4 -> v1...
    */
   getSequenceIndexForGift(coins = 5) {
     if (this.sequences.length === 0) return 0;
-    const numCoins = Number(coins) || 5;
+
+    let numCoins = 0;
+    if (typeof coins === 'number') {
+      numCoins = coins;
+    } else if (typeof coins === 'string') {
+      numCoins = Number(coins) || 0;
+    } else if (coins && typeof coins === 'object') {
+      numCoins = Number(coins.diamondCount || coins.diamonds || 0);
+    }
 
     let baseTargetSeqId = null;
 
-    // 5 to 9 Coins: Pick a random sequence
-    if (numCoins < 10) {
+    // 5 to 9 coins: Pick a random sequence
+    if (numCoins >= 5 && numCoins < 10) {
       let randomIndex = Math.floor(Math.random() * this.sequences.length);
       if (this.sequences.length > 1 && randomIndex === this.currentIndex) {
         randomIndex = (randomIndex + 1) % this.sequences.length;
       }
       baseTargetSeqId = this.sequences[randomIndex]?.id;
     } else {
-      // 10 Coins or more: select fixed sequence based on tier mapping
+      // 10 coins or more: match fixed tier
       const matchedTier = GIFT_TIER_MAPPING.find(
         tier => tier.sequenceId && numCoins >= tier.minCoins
       );
@@ -289,8 +353,9 @@ export class SequenceScheduler {
   }
 
   /**
-   * Handle TikTok Gift Event with Priority Queue & Per-User Rate Limiting:
-   * Only gifts with 5+ coins trigger/queue grand sequences (1 coin only holds camera).
+   * Handle TikTok Gift Event with Priority Queue:
+   * Gifts with 5+ coins trigger/queue grand sequences.
+   * Gifts below 5 coins (1 to 4 coins) only hold camera on spectator (15s).
    */
   onGiftReceived(giftEvent = {}) {
     const user = giftEvent.user || {};
@@ -330,7 +395,7 @@ export class SequenceScheduler {
       diamonds = Number(data.diamondCount || data.diamonds || 1);
     }
 
-    // Resolve target sequence index at enqueue time to lock in consecutive series rotation
+    // Resolve target sequence index at enqueue time based on coin amount
     const targetSequenceIndex = this.getSequenceIndexForGift(diamonds);
 
     const newItem = {

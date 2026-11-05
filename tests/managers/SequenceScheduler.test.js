@@ -213,89 +213,106 @@ describe('SequenceScheduler', () => {
   });
 
   it('should ignore gifts under 5 coins from triggering a grand sequence', () => {
-    const res = scheduler.onGiftReceived({
+    const res1 = scheduler.onGiftReceived({
       user: { id: 'viewer_1', name: 'Viewer' },
       data: { giftName: 'Rose', diamondCount: 1 }
     });
+    expect(res1.action).toBe('below_threshold');
 
-    expect(res.action).toBe('below_threshold');
+    const res4 = scheduler.onGiftReceived({
+      user: { id: 'viewer_4', name: 'Viewer 4' },
+      data: { giftName: 'Heart', diamondCount: 4 }
+    });
+    expect(res4.action).toBe('below_threshold');
     expect(scheduler.giftTriggerInfo).toBeNull();
   });
 
-  it('should resolve sequence index based on coin tiers: 5 coins random, 10, 20, 50, 100 coins fixed', () => {
-    // 5 coins -> random valid index
-    const s5 = new SequenceScheduler();
-    const idx5 = s5.getSequenceIndexForGift(5);
+  it('should trigger random sequence for 5 to 9 coins', () => {
+    const res5 = scheduler.onGiftReceived({
+      user: { id: 'viewer_5', name: 'Viewer 5' },
+      data: { giftName: 'Panda', diamondCount: 5 }
+    });
+    expect(res5.action).toBe('started');
+    expect(scheduler.giftTriggerInfo).toBeDefined();
+    expect(scheduler.giftTriggerInfo.diamonds).toBe(5);
+
+    const s = new SequenceScheduler();
+    const idx5 = s.getSequenceIndexForGift(5);
     expect(idx5).toBeGreaterThanOrEqual(0);
-    expect(idx5).toBeLessThan(s5.sequences.length);
+    expect(idx5).toBeLessThan(s.sequences.length);
+  });
 
-    // 10 coins -> blood_tear_v1
-    const s10 = new SequenceScheduler();
-    const idx10 = s10.getSequenceIndexForGift(10);
-    expect(s10.sequences[idx10].id).toBe('blood_tear_v1');
+  it('should resolve sequence index based purely on coin amount (10 to 199+ coins)', () => {
+    const s = new SequenceScheduler();
 
-    // 20 coins -> blood_tear_v2
-    const s20 = new SequenceScheduler();
-    const idx20 = s20.getSequenceIndexForGift(20);
-    expect(s20.sequences[idx20].id).toBe('blood_tear_v2');
+    const idx10 = s.getSequenceIndexForGift(10);
+    expect(s.sequences[idx10].id).toBe('monody_v1');
 
-    // 50 coins -> blood_tear_v3
-    const s50 = new SequenceScheduler();
-    const idx50 = s50.getSequenceIndexForGift(50);
-    expect(s50.sequences[idx50].id).toBe('blood_tear_v3');
+    const idx20 = s.getSequenceIndexForGift(20);
+    expect(s.sequences[idx20].id).toBe('your_name_v1');
 
-    // 100 coins -> blood_tear_v4
-    const s100 = new SequenceScheduler();
-    const idx100 = s100.getSequenceIndexForGift(100);
-    expect(s100.sequences[idx100].id).toBe('blood_tear_v4');
+    const idx30 = s.getSequenceIndexForGift(30);
+    expect(s.sequences[idx30].id).toBe('hanabi_v1');
+
+    const idx88 = s.getSequenceIndexForGift(88);
+    expect(s.sequences[idx88].id).toBe('kiepsauvanlanguoivietnam_v1');
+
+    const idx100 = s.getSequenceIndexForGift(100);
+    expect(s.sequences[idx100].id).toBe('empress_v1');
+
+    const idx149 = s.getSequenceIndexForGift(149);
+    expect(s.sequences[idx149].id).toBe('blood_tear_v3');
+
+    const idx199 = s.getSequenceIndexForGift(199);
+    expect(s.sequences[idx199].id).toBe('blood_tear_v4');
   });
 
   it('should rotate sequence versions v1 -> v4 when gifts for the same series arrive consecutively', () => {
     const rotationScheduler = new SequenceScheduler();
-    // Gift 1: 10 coins -> blood_tear_v1
-    const idx1 = rotationScheduler.getSequenceIndexForGift(10);
-    expect(rotationScheduler.sequences[idx1].id).toBe('blood_tear_v1');
+    // Gift 1: 199 coins -> blood_tear_v4
+    const idx1 = rotationScheduler.getSequenceIndexForGift(199);
+    expect(rotationScheduler.sequences[idx1].id).toBe('blood_tear_v4');
 
-    // Gift 2: 10 coins consecutively -> blood_tear_v2
-    const idx2 = rotationScheduler.getSequenceIndexForGift(10);
-    expect(rotationScheduler.sequences[idx2].id).toBe('blood_tear_v2');
+    // Gift 2: consecutively arrives within timeout -> advances to blood_tear_v1
+    const idx2 = rotationScheduler.getSequenceIndexForGift(199);
+    expect(rotationScheduler.sequences[idx2].id).toBe('blood_tear_v1');
 
-    // Gift 3: 10 coins consecutively -> blood_tear_v3
-    const idx3 = rotationScheduler.getSequenceIndexForGift(10);
-    expect(rotationScheduler.sequences[idx3].id).toBe('blood_tear_v3');
+    // Gift 3: consecutively arrives -> advances to blood_tear_v2
+    const idx3 = rotationScheduler.getSequenceIndexForGift(199);
+    expect(rotationScheduler.sequences[idx3].id).toBe('blood_tear_v2');
 
-    // Gift 4: 10 coins consecutively -> blood_tear_v4
-    const idx4 = rotationScheduler.getSequenceIndexForGift(10);
-    expect(rotationScheduler.sequences[idx4].id).toBe('blood_tear_v4');
+    // Gift 4: consecutively arrives -> advances to blood_tear_v3
+    const idx4 = rotationScheduler.getSequenceIndexForGift(199);
+    expect(rotationScheduler.sequences[idx4].id).toBe('blood_tear_v3');
 
-    // Gift 5: loops back to blood_tear_v1
-    const idx5 = rotationScheduler.getSequenceIndexForGift(10);
-    expect(rotationScheduler.sequences[idx5].id).toBe('blood_tear_v1');
+    // Gift 5: loops back to blood_tear_v4
+    const idx5 = rotationScheduler.getSequenceIndexForGift(199);
+    expect(rotationScheduler.sequences[idx5].id).toBe('blood_tear_v4');
   });
 
   it('should prioritize higher coin gifts ahead of lower coin gifts in priority queue', () => {
     scheduler.startSequence(); // State is FIRING
 
-    // User A sends 5 coins
+    // User A sends 10 coins
     scheduler.onGiftReceived({
       user: { id: 'user_a', name: 'User A' },
-      data: { giftName: 'Rose', diamondCount: 5 }
+      data: { giftName: 'Gamepad', diamondCount: 10 }
     });
 
     // User B sends 50 coins
     scheduler.onGiftReceived({
       user: { id: 'user_b', name: 'User B' },
-      data: { giftName: 'Fireworks', diamondCount: 50 }
+      data: { giftName: 'Butterfly', diamondCount: 50 }
     });
 
-    // User C sends 10 coins
+    // User C sends 20 coins
     scheduler.onGiftReceived({
       user: { id: 'user_c', name: 'User C' },
-      data: { giftName: 'Confetti', diamondCount: 10 }
+      data: { giftName: 'Perfume', diamondCount: 20 }
     });
 
     expect(scheduler.giftQueue.length).toBe(3);
-    // Highest coins (User B = 50) must be first, then C (10), then A (5)
+    // Highest coins (User B = 50) must be first, then C (20), then A (10)
     expect(scheduler.giftQueue[0].userId).toBe('user_b');
     expect(scheduler.giftQueue[1].userId).toBe('user_c');
     expect(scheduler.giftQueue[2].userId).toBe('user_a');
@@ -310,24 +327,24 @@ describe('SequenceScheduler', () => {
   it('should allow enthusiastic supporters to queue multiple sequences without arbitrary cooldown restrictions', () => {
     scheduler.startSequence();
 
-    // User A sends 5 coins
+    // User A sends 10 coins
     scheduler.onGiftReceived({
       user: { id: 'supporter_1', name: 'VIP Supporter' },
-      data: { giftName: 'Rose', diamondCount: 5 }
+      data: { giftName: 'Gamepad', diamondCount: 10 }
     });
 
-    // User A sends another 10 coins immediately
+    // User A sends another 20 coins immediately
     const res = scheduler.onGiftReceived({
       user: { id: 'supporter_1', name: 'VIP Supporter' },
-      data: { giftName: 'Confetti', diamondCount: 10 }
+      data: { giftName: 'Perfume', diamondCount: 20 }
     });
 
     expect(res.action).toBe('queued');
     // Both gifts are welcomed and queued in priority order!
     expect(scheduler.giftQueue.length).toBe(2);
-    // 10 coins is prioritized before 5 coins
-    expect(scheduler.giftQueue[0].diamonds).toBe(10);
-    expect(scheduler.giftQueue[1].diamonds).toBe(5);
+    // 20 coins is prioritized before 10 coins
+    expect(scheduler.giftQueue[0].diamonds).toBe(20);
+    expect(scheduler.giftQueue[1].diamonds).toBe(10);
   });
 });
 
@@ -369,6 +386,20 @@ describe('DirectorLaptop Component', () => {
     laptop.renderScreen();
     expect(laptop.screenTexture).toBeDefined();
 
+    laptop.dispose();
+  });
+
+  it('should render signature branding for ThaoLinn20 and (By FWA Community) on screen', () => {
+    const laptop = new DirectorLaptop();
+    if (laptop.ctx) {
+      const fillTextSpy = vi.spyOn(laptop.ctx, 'fillText');
+      laptop.renderScreen();
+
+      const calls = fillTextSpy.mock.calls.map((c) => c[0]);
+      expect(calls.some((str) => typeof str === 'string' && str.includes('ThaoLinn20'))).toBe(true);
+      expect(calls.some((str) => typeof str === 'string' && str.includes('(By FWA Community)'))).toBe(true);
+      expect(calls.some((str) => typeof str === 'string' && str.includes('FDShowStudio'))).toBe(true);
+    }
     laptop.dispose();
   });
 });

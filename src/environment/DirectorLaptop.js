@@ -9,9 +9,12 @@ export class DirectorLaptop {
     // Positioned right in front of camera (0, 3.20, 424.0) at lower-center foreground
     // Camera looks at (0, 68, 0). Laptop sits in lower 20% of screen.
     const posX = options.x !== undefined ? options.x : 0.0;
-    const posY = options.y !== undefined ? options.y : 2.50;
-    const posZ = options.z !== undefined ? options.z : 422.45;
+    const posY = options.y !== undefined ? options.y : 2.42;
+    const posZ = options.z !== undefined ? options.z : 422.48;
     this.position = new THREE.Vector3(posX, posY, posZ);
+
+    const laptopScale = options.scale !== undefined ? options.scale : 1.30;
+    this.group.scale.set(laptopScale, laptopScale, laptopScale);
 
     this.disposables = [];
     this.canvas = null;
@@ -155,8 +158,8 @@ export class DirectorLaptop {
     const tiltAngle = Math.PI * 0.11; // ~19.8 degrees tilt
     screenGroup.rotation.x = tiltAngle;
 
-    const lidW = 0.50;
-    const lidH = 0.31;
+    const lidW = 0.52;
+    const lidH = 0.32;
     const lidThick = 0.012;
 
     const lidGeo = new THREE.BoxGeometry(lidW, lidH, lidThick);
@@ -172,8 +175,8 @@ export class DirectorLaptop {
     screenGroup.add(lidMesh);
 
     // Screen Display Plane (where CanvasTexture is rendered)
-    const dispW = 0.46;
-    const dispH = 0.27;
+    const dispW = 0.48;
+    const dispH = 0.28;
     const dispGeo = new THREE.PlaneGeometry(dispW, dispH);
 
     const dispMat = new THREE.MeshBasicMaterial({
@@ -242,15 +245,15 @@ export class DirectorLaptop {
     ctx.fillRect(0, 0, width, 54);
 
     ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
+    ctx.font = '900 24px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
-    ctx.fillText('FWA PYROTECHNIC CONSOLE v3.2', 24, 27);
+    ctx.fillText('FDShowStudio Live v3.2', 24, 27);
 
-    ctx.fillStyle = '#94a3b8';
-    ctx.font = '18px monospace';
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = 'bold 22px monospace';
     ctx.textAlign = 'right';
-    ctx.fillText('DIRECTOR TERMINAL • ATAMI SHORE', width - 24, 27);
+    ctx.fillText('ThaoLinn20 • (By FWA Community)', width - 24, 27);
 
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#0284c7';
@@ -291,37 +294,36 @@ export class DirectorLaptop {
     ctx.fillStyle = statusColor;
     ctx.font = 'bold 20px monospace';
     ctx.textAlign = 'left';
-    ctx.fillText(`${seqNumStr}${statusText}`, 32, 94);
+    ctx.fillText(`${seqNumStr}${statusText}`, 32, 90);
 
     // Sequence Title
     ctx.fillStyle = '#f8fafc';
-    ctx.font = '900 40px system-ui, -apple-system, sans-serif';
+    ctx.font = '900 38px system-ui, -apple-system, sans-serif';
     let seqTitle = info.sequenceName || 'Grand Hanabi Sequence';
-    if (seqTitle.length > 30) {
-      seqTitle = seqTitle.substring(0, 28) + '...';
+    if (seqTitle.length > 36) {
+      seqTitle = seqTitle.substring(0, 34) + '...';
     }
-    ctx.fillText(seqTitle, 32, 142);
+    ctx.fillText(seqTitle, 32, 134);
 
     // Category / Metadata tag
-    ctx.fillStyle = '#64748b';
+    ctx.fillStyle = '#38bdf8';
     ctx.font = 'bold 18px monospace';
-    const audioLabel = info.audioTrack ? ` • AUDIO: ${info.audioTrack}` : '';
     const sponsorLabel = info.giftTriggerInfo ? ` • SPONSOR: ${info.giftTriggerInfo.userName}` : '';
     ctx.fillText(
-      `CATEGORY: ${info.category || 'Winter Hanabi'} • SHELLS: ${info.cueCount || 12}${audioLabel}${sponsorLabel}`,
+      `POWERED BY FDShowStudio • FWA PYROTECHNIC SHOW${sponsorLabel}`,
       32,
-      178
+      168
     );
 
     // 4. Centerpiece Huge Digital Countdown Timer Box
     const boxX = 32;
-    const boxY = 208;
+    const boxY = 194;
     const boxW = width - 64;
-    const boxH = 190;
+    const boxH = 148;
 
     ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
     ctx.beginPath();
-    ctx.roundRect(boxX, boxY, boxW, boxH, 16);
+    ctx.roundRect(boxX, boxY, boxW, boxH, 14);
     ctx.fill();
 
     ctx.lineWidth = 3;
@@ -330,7 +332,7 @@ export class DirectorLaptop {
 
     // Timer Label
     ctx.fillStyle = '#94a3b8';
-    ctx.font = 'bold 20px monospace';
+    ctx.font = 'bold 18px monospace';
     ctx.textAlign = 'center';
     let timerLabel = 'TIME REMAINING UNTIL LAUNCH';
     if (info.giftTriggerInfo && info.state === 'COUNTDOWN') {
@@ -340,7 +342,7 @@ export class DirectorLaptop {
     } else if (info.state === 'COOLDOWN') {
       timerLabel = 'COOLDOWN TIME';
     }
-    ctx.fillText(timerLabel, width * 0.5, boxY + 36);
+    ctx.fillText(timerLabel, width * 0.5, boxY + 28);
 
     // Huge Digital Numbers
     let timerStr = info.timeFormatted || '00:00.0';
@@ -349,33 +351,92 @@ export class DirectorLaptop {
     }
 
     ctx.fillStyle = statusColor;
-    ctx.font = '900 86px "Courier New", monospace';
+    ctx.font = '900 72px "Courier New", monospace';
     ctx.shadowColor = statusColor;
-    ctx.shadowBlur = 16;
-    ctx.fillText(timerStr, width * 0.5, boxY + 112);
+    ctx.shadowBlur = 14;
+    ctx.fillText(timerStr, width * 0.5, boxY + 92);
     ctx.shadowColor = 'transparent';
 
     // 5. Progress Bar
     const barX = boxX + 40;
-    const barY = boxY + boxH - 28;
+    const barY = boxY + boxH - 20;
     const barW = boxW - 80;
-    const barH = 12;
+    const barH = 10;
 
     ctx.fillStyle = '#1e293b';
     ctx.beginPath();
-    ctx.roundRect(barX, barY, barW, barH, 6);
+    ctx.roundRect(barX, barY, barW, barH, 5);
     ctx.fill();
 
     const filledW = Math.max(0, Math.min(barW, barW * (info.progress || 0)));
     if (filledW > 0) {
       ctx.fillStyle = statusColor;
       ctx.beginPath();
-      ctx.roundRect(barX, barY, filledW, barH, 6);
+      ctx.roundRect(barX, barY, filledW, barH, 5);
       ctx.fill();
     }
 
-    // 6. Bottom System Status Bar
-    const btmY = height - 42;
+    // 6. Creator and Community Signature Panel
+    const creditBoxY = 356;
+    const creditBoxH = 100;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
+    ctx.beginPath();
+    ctx.roundRect(boxX, creditBoxY, boxW, creditBoxH, 14);
+    ctx.fill();
+
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = '#38bdf8';
+    ctx.stroke();
+
+    // Line 1: FDShowStudio Branding
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = '900 24px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(
+      'FDShowStudio • Hanabi Show System',
+      boxX + 24,
+      creditBoxY + 30
+    );
+
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 18px monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText(
+      'OFFICIAL SUITE',
+      boxX + boxW - 24,
+      creditBoxY + 30
+    );
+
+    // Subtle divider
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(boxX + 24, creditBoxY + 54);
+    ctx.lineTo(boxX + boxW - 24, creditBoxY + 54);
+    ctx.stroke();
+
+    // Line 2: ThaoLinn20 and (By FWA Community)
+    ctx.fillStyle = '#fbbf24';
+    ctx.font = '900 28px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(
+      'DIRECTOR: ThaoLinn20',
+      boxX + 24,
+      creditBoxY + 76
+    );
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 26px system-ui, -apple-system, sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText(
+      '(By FWA Community)',
+      boxX + boxW - 24,
+      creditBoxY + 76
+    );
+
+    // 7. Bottom System Status Bar
+    const btmY = height - 27;
     ctx.fillStyle = '#0f172a';
     ctx.fillRect(0, height - 54, width, 54);
 
@@ -386,18 +447,18 @@ export class DirectorLaptop {
     ctx.lineTo(width, height - 54);
     ctx.stroke();
 
-    ctx.fillStyle = info.giftTriggerInfo ? '#f59e0b' : '#22c55e';
+    ctx.fillStyle = info.giftTriggerInfo ? '#f59e0b' : '#38bdf8';
     ctx.font = 'bold 18px monospace';
     ctx.textAlign = 'left';
     const queueSuffix = info.queueLength > 0 ? ` • QUEUE: ${info.queueLength} PENDING` : '';
     const statusFooter = info.giftTriggerInfo
       ? `STATUS: GIFT TRIGGERED - ${info.giftTriggerInfo.giftName.toUpperCase()}${queueSuffix}`
-      : `STATUS: AUTO-SEQUENCE ACTIVE${queueSuffix}`;
+      : `STATUS: FDShowStudio ACTIVE${queueSuffix}`;
     ctx.fillText(statusFooter, 32, btmY);
 
     ctx.fillStyle = '#64748b';
     ctx.textAlign = 'right';
-    ctx.fillText('PRESS [S] TO FIRE • [N] NEXT SEQUENCE', width - 32, btmY);
+    ctx.fillText('FWA COMMUNITY • THAOLINN20 • [S] FIRE', width - 32, btmY);
 
     // Update texture and LED
     if (this.screenTexture) {
