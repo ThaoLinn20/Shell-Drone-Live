@@ -58,7 +58,7 @@ function createWindow() {
       contextIsolation: true,
       nodeIntegration: false,
     },
-    title: 'Shell Drone Live - TikTok Interactive',
+    title: 'FDLiveStream',
     backgroundColor: '#050508',
     icon: path.join(__dirname, '../../public/icon2.ico'),
   });

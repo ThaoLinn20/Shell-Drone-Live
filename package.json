@@ -21,8 +21,8 @@
     "electron:build": "npm run build && electron-builder"
   },
   "build": {
-    "appId": "com.droneshell.editor",
-    "productName": "Firework & Drone Show Studio",
+    "appId": "com.fdlivestream.app",
+    "productName": "FDLiveStream",
     "copyright": "Copyright © 2026 ThaoLinn20",
     "directories": {
       "output": "dist-electron"
@@ -55,7 +55,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Firework & Drone Show Studio",
+      "shortcutName": "FDLiveStream",
       "displayLanguageSelector": true,
       "license": "LICENSE"
     }
