@@ -5,6 +5,7 @@ import { ShellPresetFactory } from '../factories/ShellPresetFactory.js';
 import { BurstShapeGenerator } from '../factories/BurstShapeGenerator.js';
 import { BurstEffectProcessor } from '../factories/BurstEffectProcessor.js';
 import { BurstParticleFactory } from '../factories/BurstParticleFactory.js';
+import { layoutWord } from '../factories/TextGlyphAtlas.js';
 import { resolveSecondBurstConfig } from '../factories/FireworkCompositionHelper.js';
 import { globalEventBus } from '../core/EventBus.js';
 import { InstancedShellRenderer } from '../render/InstancedShellRenderer.js';
@@ -1675,6 +1676,21 @@ export class FireworkSystem {
   }
 
   resolveBurstParticleCount(shape, effectType, preset) {
+    if (shape === 'text_word' || preset?.textWord) {
+      const textWord = preset?.textWord || preset?.word || 'HELLO';
+      let pts = preset?.textPoints;
+      if (!pts || !Array.isArray(pts) || pts.length === 0) {
+        pts = layoutWord(textWord, {
+          scale: preset?.textScale ?? 0.38,
+          letterSpacing: preset?.letterSpacing ?? 1.5
+        });
+        if (preset) {
+          preset.textPoints = pts;
+        }
+      }
+      return pts && pts.length > 0 ? pts.length : 60;
+    }
+
     if (preset?.isAscentChild) {
       return Math.round((14 + Math.floor(Math.random() * 6)) * this.graphicsQualityMultiplier);
     }
@@ -2150,13 +2166,13 @@ export class FireworkSystem {
         if (particleShape === 'willow-arch' || particleShape === 'willow-up') {
           direction = rawDir.applyQuaternion(burstYawQuat);
         } else {
-          direction = particleShape === 'heart'
+          direction = (particleShape === 'heart' || particleShape === 'text_word')
             ? rawDir.clone()
             : rawDir.applyQuaternion(burstRotation);
         }
       }
 
-      const useContourMagnitude = (!isCoreParticle && (ringPreset?.shapeRenderMode === 'outline' || particleShape === 'heart' || particleShape === 'star') && (particleShape === 'ring' || particleShape === 'heart' || particleShape === 'star')) || (particleShape === 'half-flash') || (particleShape === 'split-flash') || (particleShape === 'galaxy') || (particleShape === 'egg') || (particleShape === 'sphere_rings');
+      const useContourMagnitude = (!isCoreParticle && (ringPreset?.shapeRenderMode === 'outline' || particleShape === 'heart' || particleShape === 'star') && (particleShape === 'ring' || particleShape === 'heart' || particleShape === 'star')) || (particleShape === 'half-flash') || (particleShape === 'split-flash') || (particleShape === 'galaxy') || (particleShape === 'egg') || (particleShape === 'sphere_rings') || (particleShape === 'text_word');
       if (!useContourMagnitude) {
         direction.normalize();
       }
@@ -2175,6 +2191,9 @@ export class FireworkSystem {
       let baseSpeed;
       if (isCoreParticle) {
         baseSpeed = profileBaseSpeed * coreSpeedBand;
+      } else if (particleShape === 'text_word') {
+        const wordSpeedBand = 0.98 + (Math.random() - 0.5) * 0.04;
+        baseSpeed = profileBaseSpeed * wordSpeedBand;
       } else if (particleShape === 'ring' || particleShape === 'heart' || particleShape === 'star') {
         let speedVariance = 0.12; // Mặc định méo tự nhiên cho heart và star
         if (

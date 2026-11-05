@@ -601,7 +601,8 @@ export default {
           "sphere-uniform": "均匀球形",
           sphere_rings: "球形纬度环",
           "sphere-rings": "球形纬度环",
-          horsetail: "马尾形"
+          horsetail: "马尾形",
+          text_word: "文字烟花"
         },
         dynamicsType: {
           standard: "标准径向放射",

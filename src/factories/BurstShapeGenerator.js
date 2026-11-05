@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { layoutWord } from './TextGlyphAtlas.js';
 
 export class BurstShapeGenerator {
   static heartPoint(t) {
@@ -59,7 +60,11 @@ export class BurstShapeGenerator {
       case 'egg':
       case 'sphere_rings':
       case 'horsetail':
+      case 'text_word':
         return shellType;
+      case 'text-word':
+      case 'text':
+        return 'text_word';
       case 'horsetail_waterfall':
       case 'waterfall':
         return 'horsetail';
@@ -84,6 +89,33 @@ export class BurstShapeGenerator {
   }
 
   static direction(shape, angle, index, count, preset = null) {
+    if (shape === 'text_word') {
+      const textWord = preset?.textWord || preset?.word || 'HELLO';
+      let points = preset?.textPoints;
+      if (!points || !Array.isArray(points) || points.length === 0) {
+        points = layoutWord(textWord, {
+          scale: preset?.textScale ?? 0.38,
+          letterSpacing: preset?.letterSpacing ?? 1.5
+        });
+        if (preset) {
+          preset.textPoints = points;
+        }
+      }
+
+      if (!points || points.length === 0) {
+        return new THREE.Vector3(0, 1, 0);
+      }
+
+      const pt = points[index % points.length];
+      const tiltAngle = (preset?.tiltAngle ?? 18) * (Math.PI / 180);
+      const cosT = Math.cos(tiltAngle);
+      const sinT = Math.sin(tiltAngle);
+      const py = pt.y * cosT - pt.z * sinT;
+      const pz = pt.y * sinT + pt.z * cosT;
+
+      return new THREE.Vector3(pt.x, py, pz);
+    }
+
     if (shape === 'sparkling-branches' || shape === 'sparkling-comet-branches') {
       const numBranches = preset?.branchCount || 5;
       const cometsPerBranch = preset?.cometsPerBranch || 5;

@@ -135,10 +135,13 @@ export class LiveHUDOverlay {
     document.body.appendChild(this.container);
 
     // Clean Feed Hotkey (F10 to toggle all live HUD overlays for pristine streaming)
+    // Quick Test Toolbar Hotkey (F9 to toggle offline test controls)
     if (typeof window !== 'undefined') {
       window.addEventListener('keydown', (e) => {
         if (e.code === 'F10') {
           this.toggleCleanFeed();
+        } else if (e.code === 'F9') {
+          this.toggleTestToolbar();
         }
       });
     }
@@ -222,6 +225,8 @@ export class LiveHUDOverlay {
       { label: 'Confetti (100)', action: () => this.simulateGift('Confetti', 6064, 100) },
       { label: 'Fireworks (1088)', action: () => this.simulateGift('Fireworks', 6104, 1088) },
       { label: 'Universe (34999)', action: () => this.simulateGift('TikTok Universe', 6268, 34999) },
+      { label: 'Chat: hello moi nguoi', action: () => this.simulateChat('hello moi nguoi') },
+      { label: 'Chat: viet nam', action: () => this.simulateChat('viet nam') },
       { label: 'Chat !tim', action: () => this.simulateChat('!tim') },
       { label: 'Chat !phaohoa', action: () => this.simulateChat('!phaohoa') },
       { label: 'Like (2-4 phao)', action: () => this.simulateLike() }
@@ -267,6 +272,58 @@ export class LiveHUDOverlay {
       }
     });
     this.testToolbar.appendChild(this.ambientToggleBtn);
+
+    // Custom Comment Input Row for Text Fireworks
+    const chatRow = document.createElement('div');
+    chatRow.style.display = 'flex';
+    chatRow.style.alignItems = 'center';
+    chatRow.style.gap = '6px';
+    chatRow.style.width = '100%';
+    chatRow.style.marginTop = '6px';
+
+    const chatInput = document.createElement('input');
+    chatInput.type = 'text';
+    chatInput.placeholder = 'Type comment to fire text fireworks (e.g. hello moi nguoi)...';
+    chatInput.style.flex = '1';
+    chatInput.style.padding = '6px 12px';
+    chatInput.style.fontSize = '12px';
+    chatInput.style.borderRadius = '6px';
+    chatInput.style.border = '1px solid rgba(255, 255, 255, 0.25)';
+    chatInput.style.background = 'rgba(0, 0, 0, 0.45)';
+    chatInput.style.color = '#ffffff';
+    chatInput.style.outline = 'none';
+
+    const sendCommentBtn = document.createElement('button');
+    sendCommentBtn.innerText = 'Fire Text';
+    sendCommentBtn.style.padding = '6px 14px';
+    sendCommentBtn.style.fontSize = '12px';
+    sendCommentBtn.style.fontWeight = '600';
+    sendCommentBtn.style.borderRadius = '6px';
+    sendCommentBtn.style.border = '1px solid rgba(245, 158, 11, 0.6)';
+    sendCommentBtn.style.background = 'rgba(245, 158, 11, 0.25)';
+    sendCommentBtn.style.color = '#fbbf24';
+    sendCommentBtn.style.cursor = 'pointer';
+    sendCommentBtn.style.whiteSpace = 'nowrap';
+    sendCommentBtn.style.transition = 'all 0.15s ease';
+
+    const doSend = () => {
+      const text = chatInput.value.trim();
+      if (text) {
+        this.simulateChat(text);
+        chatInput.value = '';
+      }
+    };
+
+    sendCommentBtn.addEventListener('click', doSend);
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        doSend();
+      }
+    });
+
+    chatRow.appendChild(chatInput);
+    chatRow.appendChild(sendCommentBtn);
+    this.testToolbar.appendChild(chatRow);
 
     this.container.appendChild(this.testToolbar);
   }

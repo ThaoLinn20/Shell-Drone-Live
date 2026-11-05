@@ -295,5 +295,30 @@ describe('ViewingDeck and SpectatorCrowd', () => {
       global.Audio = originalAudio;
     }
   });
+
+  it('should return prioritized tour candidates with sponsor and honorary characters first', () => {
+    const crowd = new SpectatorCrowd();
+    const sponsorUser = {
+      id: 'sponsor_99',
+      name: 'sponsor_fan',
+      nickname: 'Sponsor Fan'
+    };
+
+    // User sends gift to get their character active
+    crowd.onViewerAction(sponsorUser, { giftName: 'Heart' });
+
+    const candidates = crowd.getTourCandidates('sponsor_99', 5);
+    expect(candidates).toBeInstanceOf(Array);
+    expect(candidates.length).toBeGreaterThanOrEqual(1);
+    expect(candidates.length).toBeLessThanOrEqual(5);
+
+    // First candidate should be the sponsor
+    expect(candidates[0].userId).toBe('sponsor_99');
+
+    // All candidates must have a valid 3D group
+    for (const c of candidates) {
+      expect(c.group).toBeDefined();
+    }
+  });
 });
 

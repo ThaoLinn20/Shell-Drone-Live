@@ -613,7 +613,8 @@ export default {
           "sphere-uniform": "Uniform Sphere",
           sphere_rings: "Sphere Latitude Rings",
           "sphere-rings": "Sphere Latitude Rings",
-          horsetail: "Horsetail"
+          horsetail: "Horsetail",
+          text_word: "Text Word"
         },
         dynamicsType: {
           standard: "Standard Radial",

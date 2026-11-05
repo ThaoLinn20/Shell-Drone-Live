@@ -92,4 +92,35 @@ describe('LiveHUDOverlay', () => {
     // Maximum 4 messages kept active simultaneously
     expect(hud.activeChatMessages.length).toBeLessThanOrEqual(4);
   });
+
+  it('should support offline test toolbar with comment simulation and toggle', () => {
+    const mockInteractionManager = {
+      handleIncomingEvent: vi.fn(),
+      setTargetUsername: vi.fn(),
+      on: vi.fn()
+    };
+
+    hud = new LiveHUDOverlay({
+      interactionManager: mockInteractionManager
+    });
+
+    expect(hud.testToolbar).toBeDefined();
+    expect(hud.testToolbar.style.display).toBe('none');
+
+    // Toggle test toolbar
+    hud.toggleTestToolbar();
+    expect(hud.testToolbar.style.display).toBe('flex');
+
+    hud.toggleTestToolbar();
+    expect(hud.testToolbar.style.display).toBe('none');
+
+    // Simulate custom chat comment
+    hud.simulateChat('hello moi nguoi');
+    expect(mockInteractionManager.handleIncomingEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'chat',
+        data: { comment: 'hello moi nguoi' }
+      })
+    );
+  });
 });

@@ -3,6 +3,7 @@
 
 import defaultRules from '../config/interaction_rules.json';
 import { proceduralShellGenerator } from '../factories/ProceduralShellGenerator.js';
+import { splitCommentIntoWords, sanitizeText } from '../factories/TextGlyphAtlas.js';
 
 export class InteractionManager {
   constructor(options = {}) {
@@ -418,17 +419,88 @@ export class InteractionManager {
       }
     }
 
-    if (!matched && this.scriptVariationEngine && this.useScriptVariation) {
-      const defaultChatRule = {
-        id: 'rule_chat_default_variation',
-        name: 'Default Chat Variation',
-        condition: { type: 'chat' },
-        action: { mode: 'script_variation', eventType: 'comment' },
-        priority: 2,
-        rateLimitMs: 350
-      };
-      this.enqueueAction(defaultChatRule, event, 1);
+    if (!matched) {
+      this.launchCommentWordFireworks(comment, event.user);
     }
+  }
+
+  launchCommentWordFireworks(comment, user = null) {
+    if (!this.fireworkSystem || !comment) {
+      return;
+    }
+
+    const words = splitCommentIntoWords(comment, 4, 8);
+    if (!words || words.length === 0) {
+      return;
+    }
+
+    const textColors = [
+      0xfde047,
+      0x38bdf8,
+      0x4ade80,
+      0xf472b6,
+      0xa78bfa,
+      0xffffff
+    ];
+
+    const chosenColor = textColors[Math.floor(Math.random() * textColors.length)];
+    const wordCount = words.length;
+    const spacingX = 0.12;
+    const startRatioX = wordCount === 1
+      ? 0.50
+      : 0.50 - ((wordCount - 1) * spacingX) * 0.5;
+
+    words.forEach((word, index) => {
+      const delayMs = index * 1200;
+      const ratioX = Math.max(
+        0.18,
+        Math.min(
+          0.82,
+          startRatioX + index * spacingX
+        )
+      );
+      const ratioY = 0.54 + (index % 2 === 0 ? 0.03 : -0.03);
+
+      const fire = () => {
+        if (!this.fireworkSystem) {
+          return;
+        }
+
+        const shellPreset = {
+          shellType: 'text_word',
+          shapeType: 'text_word',
+          effectType: 'standard',
+          textWord: word,
+          color: chosenColor,
+          drag: 1.85,
+          starLife: 2500,
+          starLifeMultiplier: 1.2,
+          instantBurst: false
+        };
+
+        const options = {
+          sectorId: 'center',
+          ratioX: ratioX,
+          ratioY: ratioY,
+          color: chosenColor,
+          effectOverrides: {
+            textWord: word,
+            shapeType: 'text_word'
+          }
+        };
+
+        this.fireworkSystem.launchRandom(
+          shellPreset,
+          options
+        );
+      };
+
+      if (delayMs === 0) {
+        fire();
+      } else {
+        setTimeout(fire, delayMs);
+      }
+    });
   }
 
   enqueueAction(rule, sourceEvent, count = 1) {
@@ -484,6 +556,12 @@ export class InteractionManager {
 
   executeAction(action, event, count = 1) {
     if (!this.fireworkSystem) return;
+
+    if (action.mode === 'text_word' || action.mode === 'text') {
+      const comment = event?.data?.comment || event?.data?.message || action.text || '';
+      this.launchCommentWordFireworks(comment, event?.user);
+      return;
+    }
 
     if (this.scriptVariationEngine && (action.mode === 'script_variation' || this.useScriptVariation)) {
       const eventType = action.eventType || (event?.type === 'chat' ? 'comment' : (event?.type || 'like'));

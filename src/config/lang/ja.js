@@ -602,7 +602,8 @@ export default {
           sphere_rings: "球体緯度リング",
           "sphere-rings": "球体緯度リング",
           waterfall: "ウォーターフォール滝",
-          horsetail: "馬尾形"
+          horsetail: "馬尾形",
+          text_word: "文字花火"
         },
         dynamicsType: {
           standard: "標準放射",

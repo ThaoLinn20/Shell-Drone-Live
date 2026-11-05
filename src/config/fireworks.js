@@ -238,7 +238,9 @@ export const FIREWORK_CONFIG = {
     egg: 1.50,
     sphere_rings: 1.55,
     'sphere-rings': 1.55,
-    horsetail: 0.58
+    horsetail: 0.58,
+    text_word: 1.0,
+    'text-word': 1.0
   },
 
   // Hệ số nhân số lượng hạt dựa trên hiệu ứng hình ảnh (Effect)

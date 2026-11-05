@@ -1666,6 +1666,53 @@ export class SpectatorCrowd {
     this.viewerMap.set(cleanName.toLowerCase(), char.slotIndex);
   }
 
+  /**
+   * Returns an array of priority characters for camera touring during sequences:
+   * Priority 1: Trigger Gifter / Sponsor character
+   * Priority 2: VIP / Honorary characters (gifter, liker, commenter)
+   * Priority 3: Active spectators on the beach
+   */
+  getTourCandidates(sponsorUserId = null, limit = 6) {
+    if (!this.characters || this.characters.length === 0) {
+      return [];
+    }
+
+    const candidates = [];
+
+    // Priority 1: Trigger Gifter / Sponsor character
+    if (sponsorUserId) {
+      const cleanId = String(sponsorUserId).toLowerCase().trim();
+      const sponsorChar = this.characters.find(
+        (c) =>
+          (c.viewerId && String(c.viewerId).toLowerCase().trim() === cleanId) ||
+          (c.userId && String(c.userId).toLowerCase().trim() === cleanId) ||
+          (c.name && String(c.name).toLowerCase().trim() === cleanId)
+      );
+      if (sponsorChar && sponsorChar.group) {
+        candidates.push(sponsorChar);
+      }
+    }
+
+    // Priority 2: VIP / Honorary characters (Top Gifter, Top Liker, Top Commenter)
+    const honoraryOrder = ['gifter', 'liker', 'commenter'];
+    for (const cat of honoraryOrder) {
+      const hChar = this.honoraryCharacters[cat];
+      if (hChar && hChar.group && !candidates.includes(hChar)) {
+        candidates.push(hChar);
+      }
+    }
+
+    // Priority 3: Active spectators on the beach
+    for (const char of this.characters) {
+      if (candidates.length >= limit) break;
+      if (!candidates.includes(char) && char && char.group) {
+        candidates.push(char);
+      }
+    }
+
+    return candidates.slice(0, limit);
+  }
+
   updateHonoraryBadge(char, name, type, score) {
     this.updateShirtPlate(char, name, type, score);
     const badge = char.nameTag;
@@ -1731,6 +1778,9 @@ export class SpectatorCrowd {
 
     const char = this.characters[charIndex];
     if (char) {
+      char.userId = user?.id || user?.userId || null;
+      char.viewerId = user?.id || user?.userId || null;
+      char.user = user;
       char.state = 'cheering';
       char.cheerTimer = 3.5;
       if (!char.isHonorary) {

@@ -54,6 +54,9 @@ export class CameraManager {
     // Third-person spectator vantage mode (triggered on viewer gift)
     this.thirdPersonState = null;
 
+    // Multi-spectator tour state during sequence playback (5s per spectator)
+    this.spectatorTourState = null;
+
     this.eventSubscriptions = [];
     if (this.eventBus && typeof this.eventBus.on === 'function') {
       this.eventSubscriptions.push(
@@ -72,7 +75,26 @@ export class CameraManager {
         })
       );
       this.eventSubscriptions.push(
+        this.eventBus.on('sequence:started', (detail) => {
+          const crowd = this.sceneManager?.spectatorCrowd;
+          if (crowd && typeof crowd.getTourCandidates === 'function') {
+            const sponsorId =
+              detail?.sponsorUserId ||
+              detail?.giftInfo?.userId ||
+              detail?.giftTriggerInfo?.userId ||
+              detail?.giftInfo?.userName;
+            const candidates = crowd.getTourCandidates(sponsorId, 6);
+            if (candidates.length > 0) {
+              this.startSpectatorTour(candidates, 5.0);
+            }
+          }
+        })
+      );
+      this.eventSubscriptions.push(
         this.eventBus.on('sequence:ended', () => {
+          if (this.spectatorTourState) {
+            this.stopSpectatorTour();
+          }
           if (this.thirdPersonState && this.thirdPersonState.phase === 'holding') {
             // Settle embers for 1.5s then smoothly return to default framing
             setTimeout(() => {
@@ -351,9 +373,9 @@ export class CameraManager {
     this.isBroadcastLocked = false;
   }
 
-  focusThirdPersonOnCharacter(character, duration = 25.0) {
+  _computeVantageForCharacter(character, outPos, outTarget) {
     if (!character || !character.group) {
-      return;
+      return false;
     }
 
     if (character.group.parent) {
@@ -365,16 +387,36 @@ export class CameraManager {
     character.group.getWorldPosition(charWorldPos);
 
     const shoulderOffset = charWorldPos.x >= 0 ? 0.42 : -0.42;
-    const vantagePos = new THREE.Vector3(
+    outPos.set(
       charWorldPos.x + shoulderOffset,
       charWorldPos.y + 2.15,
       charWorldPos.z + 1.8
     );
 
-    const vantageTarget = new THREE.Vector3(
+    outTarget.set(
       charWorldPos.x * 0.35,
       80.0,
       0.0
+    );
+
+    return true;
+  }
+
+  focusThirdPersonOnCharacter(character, duration = 25.0) {
+    if (!character || !character.group) {
+      return;
+    }
+
+    if (this.spectatorTourState) {
+      this.cancelSpectatorTour();
+    }
+
+    const vantagePos = new THREE.Vector3();
+    const vantageTarget = new THREE.Vector3();
+    this._computeVantageForCharacter(
+      character,
+      vantagePos,
+      vantageTarget
     );
 
     const homePos = this.isBroadcastLocked && this.broadcastPosition
@@ -547,9 +589,232 @@ export class CameraManager {
     }
   }
 
-  update(deltaTime) {
-    // 0. Third-Person Spectator Vantage Mode or Fixed Broadcast Tripod Framing
+  startSpectatorTour(characters, holdDuration = 5.0) {
+    if (!characters || characters.length === 0) {
+      return;
+    }
+
     if (this.thirdPersonState) {
+      this.cancelThirdPersonView();
+    }
+    if (this.spectatorTourState) {
+      this.cancelSpectatorTour();
+    }
+
+    const homePos = this.isBroadcastLocked && this.broadcastPosition
+      ? this.broadcastPosition.clone()
+      : this.savedFreePosition.clone();
+
+    const homeTarget = this.isBroadcastLocked && this.broadcastTarget
+      ? this.broadcastTarget.clone()
+      : this.stageTarget.clone();
+
+    const startPos = this.instance.position.clone();
+    const currentDirection = new THREE.Vector3();
+    this.instance.getWorldDirection(currentDirection);
+    const startTarget = this.instance.position.clone().add(
+      currentDirection.multiplyScalar(200)
+    );
+
+    const firstChar = characters[0];
+    const vantagePos = new THREE.Vector3();
+    const vantageTarget = new THREE.Vector3();
+    this._computeVantageForCharacter(
+      firstChar,
+      vantagePos,
+      vantageTarget
+    );
+
+    this.spectatorTourState = {
+      candidates: [...characters],
+      currentIndex: 0,
+      phase: 'entering',
+      elapsed: 0,
+      transitionDuration: 1.2,
+      holdDuration: Math.max(1.0, holdDuration),
+      returnDuration: 1.4,
+      startPos,
+      startTarget,
+      homePos,
+      homeTarget
+    };
+
+    if (this.sceneManager?.spectatorCrowd) {
+      this.sceneManager.spectatorCrowd.setThirdPersonFocus(firstChar);
+    }
+    if (this.eventBus && typeof this.eventBus.emit === 'function') {
+      this.eventBus.emit('camera:spectator_tour_started', {
+        character: firstChar,
+        index: 0,
+        total: characters.length
+      });
+    }
+  }
+
+  stopSpectatorTour() {
+    if (!this.spectatorTourState) {
+      return;
+    }
+    const state = this.spectatorTourState;
+    if (state.phase === 'returning') {
+      return;
+    }
+    state.phase = 'returning';
+    state.elapsed = 0;
+    state.startPos.copy(this.instance.position);
+    const currentDirection = new THREE.Vector3();
+    this.instance.getWorldDirection(currentDirection);
+    state.startTarget.copy(
+      this.instance.position.clone().add(currentDirection.multiplyScalar(200))
+    );
+  }
+
+  cancelSpectatorTour() {
+    if (!this.spectatorTourState) {
+      return;
+    }
+    if (this.sceneManager?.spectatorCrowd) {
+      this.sceneManager.spectatorCrowd.setThirdPersonFocus(null);
+    }
+    if (this.eventBus && typeof this.eventBus.emit === 'function') {
+      this.eventBus.emit('camera:spectator_tour_ended', {
+        active: false
+      });
+    }
+    this.spectatorTourState = null;
+    if (
+      this.isBroadcastLocked &&
+      this.broadcastPosition &&
+      this.broadcastTarget
+    ) {
+      this.instance.position.copy(this.broadcastPosition);
+      this.instance.lookAt(this.broadcastTarget);
+    }
+  }
+
+  updateSpectatorTour(deltaTime) {
+    if (!this.spectatorTourState) {
+      return;
+    }
+
+    const state = this.spectatorTourState;
+    if (!state.candidates || state.candidates.length === 0) {
+      this.cancelSpectatorTour();
+      return;
+    }
+
+    const currentChar = state.candidates[state.currentIndex];
+    if (!currentChar || !currentChar.group) {
+      this.stopSpectatorTour();
+      return;
+    }
+
+    const currentVantagePos = new THREE.Vector3();
+    const currentVantageTarget = new THREE.Vector3();
+    this._computeVantageForCharacter(
+      currentChar,
+      currentVantagePos,
+      currentVantageTarget
+    );
+
+    state.elapsed += deltaTime;
+
+    if (state.phase === 'entering' || state.phase === 'switching') {
+      const progress = Math.min(
+        1.0,
+        state.elapsed / state.transitionDuration
+      );
+      const ease = progress * progress * (3.0 - 2.0 * progress);
+
+      this.instance.position.copy(state.startPos).lerp(
+        currentVantagePos,
+        ease
+      );
+
+      const lookTarget = state.startTarget.clone().lerp(
+        currentVantageTarget,
+        ease
+      );
+      this.instance.lookAt(lookTarget);
+
+      if (progress >= 1.0) {
+        state.phase = 'holding';
+        state.elapsed = 0;
+      }
+    } else if (state.phase === 'holding') {
+      this.instance.position.lerp(currentVantagePos, 0.12);
+      this.instance.lookAt(currentVantageTarget);
+
+      if (state.elapsed >= state.holdDuration) {
+        const nextIndex = (state.currentIndex + 1) % state.candidates.length;
+        const nextChar = state.candidates[nextIndex];
+
+        state.currentIndex = nextIndex;
+        state.phase = 'switching';
+        state.elapsed = 0;
+        state.startPos.copy(this.instance.position);
+        const currentDirection = new THREE.Vector3();
+        this.instance.getWorldDirection(currentDirection);
+        state.startTarget.copy(
+          this.instance.position.clone().add(currentDirection.multiplyScalar(200))
+        );
+
+        if (this.sceneManager?.spectatorCrowd) {
+          this.sceneManager.spectatorCrowd.setThirdPersonFocus(nextChar);
+        }
+        if (this.eventBus && typeof this.eventBus.emit === 'function') {
+          this.eventBus.emit('camera:spectator_tour_advanced', {
+            character: nextChar,
+            index: nextIndex,
+            total: state.candidates.length
+          });
+        }
+      }
+    } else if (state.phase === 'returning') {
+      const progress = Math.min(
+        1.0,
+        state.elapsed / state.returnDuration
+      );
+      const ease = progress * progress * (3.0 - 2.0 * progress);
+
+      this.instance.position.copy(state.startPos).lerp(
+        state.homePos,
+        ease
+      );
+
+      const lookTarget = state.startTarget.clone().lerp(
+        state.homeTarget,
+        ease
+      );
+      this.instance.lookAt(lookTarget);
+
+      if (progress >= 1.0) {
+        if (this.sceneManager?.spectatorCrowd) {
+          this.sceneManager.spectatorCrowd.setThirdPersonFocus(null);
+        }
+        if (this.eventBus && typeof this.eventBus.emit === 'function') {
+          this.eventBus.emit('camera:spectator_tour_ended', {
+            active: false
+          });
+        }
+        this.spectatorTourState = null;
+        if (
+          this.isBroadcastLocked &&
+          this.broadcastPosition &&
+          this.broadcastTarget
+        ) {
+          this.instance.position.copy(this.broadcastPosition);
+          this.instance.lookAt(this.broadcastTarget);
+        }
+      }
+    }
+  }
+
+  update(deltaTime) {
+    // 0. Spectator Tour or Third-Person Spectator Vantage Mode or Fixed Broadcast Tripod Framing
+    if (this.spectatorTourState) {
+      this.updateSpectatorTour(deltaTime);
+    } else if (this.thirdPersonState) {
       this.updateThirdPersonView(deltaTime);
     } else if (this.isBroadcastLocked && this.broadcastPosition && this.broadcastTarget) {
       this.instance.position.copy(this.broadcastPosition);
@@ -666,6 +931,7 @@ export class CameraManager {
   }
 
   destroy() {
+    this.cancelSpectatorTour();
     this.cancelThirdPersonView();
     for (const unsubscribe of this.eventSubscriptions) {
       unsubscribe();

@@ -1,3 +1,5 @@
+import { sanitizeText, layoutWord } from './TextGlyphAtlas.js';
+
 const COLOR = {
   Red: 'red',
   Gold: 'gold',
@@ -41,7 +43,10 @@ export class ShellPresetFactory {
       'sphere-uniform',
       'egg',
       'sphere_rings',
-      'horsetail'
+      'horsetail',
+      'text_word',
+      'text-word',
+      'text'
     ]);
     this.effectRegistry = new Set([
       'standard',
@@ -159,7 +164,8 @@ export class ShellPresetFactory {
       { key: 'double_helix', label: 'Double Helix' },
       { key: 'crossette', label: 'Crossette' },
       { key: 'sphere_erratic_dart', label: 'Sphere Erratic Dart' },
-      { key: 'horsetail_waterfall', label: 'Horsetail Waterfall' }
+      { key: 'horsetail_waterfall', label: 'Horsetail Waterfall' },
+      { key: 'text_word', label: 'Text Word' }
     ];
 
     // Registry for dynamic preset strategies (OCP compliance)
@@ -254,6 +260,7 @@ export class ShellPresetFactory {
     registerWithAlias('sphere_erratic_dart', 'sphereErraticDart', (size) => this.sphereErraticDartShell(size));
     registerWithAlias('horsetail_waterfall', 'horsetailWaterfall', (size) => this.horsetailWaterfallShell(size));
     registerWithAlias('horsetail', 'horsetail', (size) => this.horsetailWaterfallShell(size));
+    registerWithAlias('text_word', 'textWord', (size) => this.textWordShell('HELLO', { size }));
   }
 
   randomPreset() {
@@ -1491,5 +1498,43 @@ export class ShellPresetFactory {
       launchTrail: true,
       burstSmoke: false
     };
+  }
+
+  textWordShell(word = 'HELLO', options = {}) {
+    const size = options.size ?? 1;
+    const cleanWord = sanitizeText(word) || 'HELLO';
+    const textPts = layoutWord(cleanWord, {
+      scale: options.scale ?? 0.38,
+      letterSpacing: options.letterSpacing ?? 1.5
+    });
+
+    return {
+      ...this.basePreset(size),
+      shellType: 'text_word',
+      shapeType: 'text_word',
+      effectType: options.effectType ?? 'standard',
+      textWord: cleanWord,
+      textPoints: textPts,
+      color: options.color || this.randomNeonColor(),
+      drag: 1.85,
+      starLife: 2400 + size * 400,
+      starLifeMultiplier: 1.2,
+      hasCustomColor: Boolean(options.color),
+      instantBurst: Boolean(options.instantBurst),
+      launchTrail: true,
+      burstSmoke: false
+    };
+  }
+
+  randomNeonColor() {
+    const neonColors = [
+      0xfde047,
+      0x38bdf8,
+      0x4ade80,
+      0xf472b6,
+      0xa78bfa,
+      0xffffff
+    ];
+    return neonColors[Math.floor(Math.random() * neonColors.length)];
   }
 }

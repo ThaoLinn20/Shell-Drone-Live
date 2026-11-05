@@ -21,7 +21,8 @@ export const AVAILABLE_SHAPES = [
   'sphere_uniform',
   'egg',
   'sphere_rings',
-  'horsetail'
+  'horsetail',
+  'text_word'
 ];
 
 export const AVAILABLE_DYNAMICS = [

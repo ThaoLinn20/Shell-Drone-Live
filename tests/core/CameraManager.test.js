@@ -84,7 +84,7 @@ describe('CameraManager', () => {
 
     // Switch to boat mode with a mock sceneManager
     cameraManager.sceneManager = {
-      setBoatPassengerPos: () => {},
+      setBoatPassengerPos: () => { },
       getBoatTransform: () => ({
         x: 100,
         y: 4.3,
@@ -280,5 +280,74 @@ describe('CameraManager', () => {
 
     cameraManager.cancelThirdPersonView();
     expect(focusCalls[focusCalls.length - 1]).toBeNull();
+  });
+
+  it('should start spectator tour on sequence:started with candidates and cycle through them', () => {
+    const char1Group = new THREE.Group();
+    char1Group.position.set(-10, 4.0, 400.0);
+    const char2Group = new THREE.Group();
+    char2Group.position.set(10, 4.0, 400.0);
+
+    const candidates = [
+      { id: 'c1', group: char1Group },
+      { id: 'c2', group: char2Group }
+    ];
+
+    const focusLog = [];
+    cameraManager.sceneManager = {
+      spectatorCrowd: {
+        getTourCandidates: (sponsorId, limit) => candidates,
+        setThirdPersonFocus: (char) => {
+          focusLog.push(char);
+        }
+      }
+    };
+
+    // Emit sequence:started
+    eventBus.emit('sequence:started', {
+      sponsorUserId: 'user123'
+    });
+
+    expect(cameraManager.spectatorTourState).toBeDefined();
+    expect(cameraManager.spectatorTourState.candidates.length).toBe(2);
+    expect(cameraManager.spectatorTourState.currentIndex).toBe(0);
+    expect(cameraManager.spectatorTourState.phase).toBe('entering');
+    expect(focusLog[0]).toBe(candidates[0]);
+
+    // Update through transition (1.2s)
+    cameraManager.update(1.2);
+    expect(cameraManager.spectatorTourState.phase).toBe('holding');
+
+    // Hold for 5.0 seconds
+    cameraManager.update(5.1);
+    // Should now switch to candidate 1
+    expect(cameraManager.spectatorTourState.phase).toBe('switching');
+    expect(cameraManager.spectatorTourState.currentIndex).toBe(1);
+    expect(focusLog[1]).toBe(candidates[1]);
+
+    // Finish switching transition (1.2s)
+    cameraManager.update(1.2);
+    expect(cameraManager.spectatorTourState.phase).toBe('holding');
+
+    // Emit sequence:ended -> should transition to returning
+    eventBus.emit('sequence:ended');
+    expect(cameraManager.spectatorTourState.phase).toBe('returning');
+
+    // Finish returning duration (1.4s)
+    cameraManager.update(1.4);
+    expect(cameraManager.spectatorTourState).toBeNull();
+    expect(focusLog[focusLog.length - 1]).toBeNull();
+  });
+
+  it('should cancel spectator tour immediately when cancelSpectatorTour is called', () => {
+    const charGroup = new THREE.Group();
+    charGroup.position.set(0, 4.0, 400.0);
+    const mockChar = { group: charGroup };
+
+    cameraManager.startSpectatorTour([mockChar], 5.0);
+    expect(cameraManager.spectatorTourState).not.toBeNull();
+
+    cameraManager.cancelSpectatorTour();
+    expect(cameraManager.spectatorTourState).toBeNull();
   });
 });

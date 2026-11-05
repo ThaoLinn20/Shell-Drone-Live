@@ -613,7 +613,8 @@ export default {
           "sphere-uniform": "Hình cầu đồng đều",
           sphere_rings: "Vành đai cầu vĩ độ",
           "sphere-rings": "Vành đai cầu vĩ độ",
-          horsetail: "Thác nước đuôi ngựa"
+          horsetail: "Thác nước đuôi ngựa",
+          text_word: "Pháo hoa chữ"
         },
         dynamicsType: {
           standard: "Tỏa đều tiêu chuẩn",
