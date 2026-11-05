@@ -383,19 +383,26 @@ export class CameraManager {
     }
     character.group.updateMatrixWorld(true);
 
-    const charWorldPos = new THREE.Vector3();
-    character.group.getWorldPosition(charWorldPos);
+    const headWorldPos = new THREE.Vector3();
+    if (
+      character.headGroup &&
+      typeof character.headGroup.getWorldPosition === 'function'
+    ) {
+      character.headGroup.getWorldPosition(headWorldPos);
+    } else {
+      character.group.getWorldPosition(headWorldPos);
+      headWorldPos.y += 1.15;
+    }
 
-    const shoulderOffset = charWorldPos.x >= 0 ? 0.42 : -0.42;
     outPos.set(
-      charWorldPos.x + shoulderOffset,
-      charWorldPos.y + 2.15,
-      charWorldPos.z + 1.8
+      headWorldPos.x,
+      Math.max(2.4, headWorldPos.y + 0.3),
+      headWorldPos.z + 0.5
     );
 
     outTarget.set(
-      charWorldPos.x * 0.35,
-      80.0,
+      0.0,
+      48.0,
       0.0
     );
 
@@ -494,24 +501,12 @@ export class CameraManager {
       return;
     }
 
-    if (char.group.parent) {
-      char.group.parent.updateMatrixWorld(true);
-    }
-    char.group.updateMatrixWorld(true);
-
-    const charWorldPos = new THREE.Vector3();
-    char.group.getWorldPosition(charWorldPos);
-
-    const shoulderOffset = charWorldPos.x >= 0 ? 0.42 : -0.42;
-    const currentVantagePos = new THREE.Vector3(
-      charWorldPos.x + shoulderOffset,
-      charWorldPos.y + 2.15,
-      charWorldPos.z + 1.8
-    );
-    const currentVantageTarget = new THREE.Vector3(
-      charWorldPos.x * 0.35,
-      80.0,
-      0.0
+    const currentVantagePos = new THREE.Vector3();
+    const currentVantageTarget = new THREE.Vector3();
+    this._computeVantageForCharacter(
+      char,
+      currentVantagePos,
+      currentVantageTarget
     );
 
     state.elapsed += deltaTime;

@@ -179,15 +179,46 @@ export class SpectatorCrowd {
     this.initCrowd();
   }
 
+  setGroupOpacity(group, opacity = 1.0) {
+    if (!group) return;
+    const isTranslucent = opacity < 1.0;
+    group.traverse((obj) => {
+      if (obj.isMesh && obj.material) {
+        if (obj.userData._origOpacity === undefined) {
+          obj.userData._origOpacity = obj.material.opacity !== undefined
+            ? obj.material.opacity
+            : 1.0;
+          obj.userData._origTransparent = Boolean(obj.material.transparent);
+        }
+        if (isTranslucent) {
+          obj.material.transparent = true;
+          obj.material.opacity = obj.userData._origOpacity * opacity;
+          obj.material.needsUpdate = true;
+        } else {
+          obj.material.transparent = obj.userData._origTransparent;
+          obj.material.opacity = obj.userData._origOpacity;
+          obj.material.needsUpdate = true;
+        }
+      }
+    });
+  }
+
+  setCharacterOpacity(char, opacity = 1.0) {
+    if (!char || !char.group) return;
+    this.setGroupOpacity(char.group, opacity);
+  }
+
   setThirdPersonFocus(focusedChar) {
     this.focusedSpectator = focusedChar || null;
 
     if (!focusedChar) {
       if (this.vipTableGroup) {
+        this.setGroupOpacity(this.vipTableGroup, 1.0);
         this.vipTableGroup.visible = true;
       }
       for (const char of this.characters) {
         char.group.visible = true;
+        this.setCharacterOpacity(char, 1.0);
         if (char.nameTag) {
           char.nameTag.visible = char.isHonorary
             ? true
@@ -201,13 +232,14 @@ export class SpectatorCrowd {
     }
 
     if (this.vipTableGroup) {
-      this.vipTableGroup.visible = Boolean(focusedChar.isHonorary);
+      this.setGroupOpacity(this.vipTableGroup, 0.78);
     }
 
+    // Hide the focused character for clear camera POV, while keeping other spectators
+    // distinctly visible with clear 78% opacity to preserve vibrant festival crowd
     for (const char of this.characters) {
       if (char === focusedChar) {
-        char.group.visible = true;
-        // Hide the billboard name tag and speech bubble during 3rd person POV so they do not occlude fireworks
+        char.group.visible = false;
         if (char.nameTag) {
           char.nameTag.visible = false;
         }
@@ -215,8 +247,8 @@ export class SpectatorCrowd {
           char.speechBubble.visible = false;
         }
       } else {
-        // Completely hide all other spectators and their tags so the line of sight to fireworks is 100% unobstructed
-        char.group.visible = false;
+        char.group.visible = true;
+        this.setCharacterOpacity(char, 0.78);
         if (char.nameTag) {
           char.nameTag.visible = false;
         }
@@ -710,7 +742,7 @@ export class SpectatorCrowd {
     buckle.position.set(0, 0.86, torsoD * 0.5 + 0.015);
     charGroup.add(buckle);
 
-    // Contrasting shirt collar
+    // Contrasting shirt collar attached directly to torso
     const collarGeo = new THREE.BoxGeometry(
       torsoW * 0.45,
       0.05,
@@ -721,8 +753,8 @@ export class SpectatorCrowd {
       roughness: 0.7
     });
     const collar = new THREE.Mesh(collarGeo, collarMat);
-    collar.position.set(0, 1.54, torsoD * 0.35);
-    charGroup.add(collar);
+    collar.position.set(0, torsoH * 0.5 + 0.015, torsoD * 0.35);
+    torso.add(collar);
 
     // 3. Head, Hair Styles, and Glasses
     const headGroup = new THREE.Group();
@@ -938,12 +970,11 @@ export class SpectatorCrowd {
 
     charGroup.add(rightArmGroup);
 
-    // Calculate lateral offset beside the head: left side for left characters, right side for right/center
     const tagSideOffset = slotConfig.tagSideOffset !== undefined
       ? slotConfig.tagSideOffset
-      : (x < -0.5 ? -0.72 : 0.72);
+      : 0;
 
-    // 5. 3D Name Tag or Prestige Honorary Badge (positioned beside the head at eye level)
+    // 5. 3D Name Tag or Prestige Honorary Badge (centered cleanly above head to avoid any occlusion)
     let nameTag = null;
     if (isHonorary) {
       nameTag = this.createHonoraryBadgeSprite(
@@ -951,13 +982,13 @@ export class SpectatorCrowd {
         honoraryType,
         slotConfig.initialScore || 0
       );
-      nameTag.position.set(tagSideOffset, 1.15, 0);
-      nameTag.scale.set(0.95, 0.35, 1.0);
+      nameTag.position.set(0, 1.36, 0);
+      nameTag.scale.set(0.58, 0.18, 1.0);
       nameTag.visible = true;
     } else {
       nameTag = this.createNameTagSprite(name, isFemale);
-      nameTag.position.set(tagSideOffset, 1.10, 0);
-      nameTag.scale.set(0.85, 0.24, 1.0);
+      nameTag.position.set(0, 1.32, 0);
+      nameTag.scale.set(0.48, 0.13, 1.0);
       nameTag.visible = false;
     }
     charGroup.add(nameTag);
@@ -1050,8 +1081,8 @@ export class SpectatorCrowd {
     }
 
     const plateGeo = new THREE.PlaneGeometry(
-      torsoW * 0.88,
-      torsoH * 0.74
+      torsoW * 0.92,
+      torsoH * 0.80
     );
     if (this.disposables) {
       this.disposables.push(plateGeo);
@@ -1142,7 +1173,7 @@ export class SpectatorCrowd {
     // 1. Jersey back patch background
     ctx.beginPath();
     ctx.roundRect(pad, pad, width - pad * 2, height - pad * 2, r);
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.92)';
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.94)';
     ctx.fill();
 
     // Metallic outer border
@@ -1154,33 +1185,32 @@ export class SpectatorCrowd {
     ctx.lineWidth = 2;
     ctx.strokeStyle = isHonorary
       ? 'rgba(255, 255, 255, 0.45)'
-      : 'rgba(255, 255, 255, 0.18)';
+      : 'rgba(255, 255, 255, 0.22)';
     ctx.stroke();
 
     // 2. Top Title Ribbon
-    const bannerH = 74;
+    const bannerH = 62;
     ctx.beginPath();
     ctx.roundRect(
       pad + 8,
       pad + 8,
       width - pad * 2 - 16,
       bannerH,
-      [r - 6, r - 6, 10, 10]
+      [r - 6, r - 6, 8, 8]
     );
     ctx.fillStyle = bannerBg;
     ctx.fill();
 
     ctx.fillStyle = bannerTextColor;
-    ctx.font = 'bold 30px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = 'bold 26px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(topTitle, width * 0.5, pad + 8 + bannerH * 0.5);
 
-    // 3. Center FWA Community Branding
-    // Line 1: FWA (Athletic, high-impact block typography)
-    const fwaY = 240;
+    // 3. FWA High-Impact Branding
+    const fwaY = 178;
     ctx.fillStyle = '#ffffff';
-    ctx.font = '900 114px "Arial Black", Impact, system-ui, sans-serif';
+    ctx.font = '900 112px "Arial Black", Impact, system-ui, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
@@ -1189,10 +1219,11 @@ export class SpectatorCrowd {
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 4;
     ctx.fillText('FWA', width * 0.5, fwaY);
+    ctx.shadowColor = 'transparent';
 
     // Decorative metallic divider bar
-    const sepW = 190;
-    const sepY = 308;
+    const sepW = 240;
+    const sepY = 246;
     ctx.beginPath();
     ctx.moveTo((width - sepW) * 0.5, sepY);
     ctx.lineTo((width + sepW) * 0.5, sepY);
@@ -1200,27 +1231,54 @@ export class SpectatorCrowd {
     ctx.strokeStyle = emblemColor;
     ctx.stroke();
 
-    // Line 2: Community (Stylized subtitle font)
-    const commY = 360;
-    ctx.fillStyle = isHonorary ? emblemColor : '#94a3b8';
-    ctx.font = 'bold 44px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.shadowBlur = 8;
-    ctx.shadowOffsetY = 2;
-    ctx.fillText('Community', width * 0.5, commY);
-    ctx.shadowColor = 'transparent';
-
-    // 4. Bottom Subtitle / Score / Seat Ribbon
-    const bottomH = 68;
-    const bottomY = height - pad - 12 - bottomH;
+    // 4. Dedicated Viewer Name Plaque (Large, high-contrast, clearly legible font)
+    const nameBoxH = 155;
+    const nameBoxY = 264;
+    const nameBoxW = width - pad * 2 - 24;
     ctx.beginPath();
     ctx.roundRect(
-      pad + 18,
-      bottomY,
-      width - pad * 2 - 36,
-      bottomH,
+      pad + 12,
+      nameBoxY,
+      nameBoxW,
+      nameBoxH,
       16
     );
     ctx.fillStyle = 'rgba(2, 6, 23, 0.88)';
+    ctx.fill();
+
+    ctx.lineWidth = 2.5;
+    ctx.strokeStyle = isHonorary ? emblemColor : 'rgba(255, 255, 255, 0.35)';
+    ctx.stroke();
+
+    // Viewer Name with intelligent dynamic auto-scaling for optimal readability
+    const cleanName = String(name || 'Viewer').trim();
+    let nameFontSize = cleanName.length <= 8 ? 62 : (cleanName.length <= 14 ? 50 : 38);
+    ctx.font = `900 ${nameFontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    const maxTextWidth = nameBoxW - 28;
+    while (ctx.measureText(cleanName).width > maxTextWidth && nameFontSize > 22) {
+      nameFontSize -= 2;
+      ctx.font = `900 ${nameFontSize}px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+    }
+
+    ctx.fillStyle = isHonorary ? emblemColor : '#ffffff';
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 3;
+    ctx.fillText(cleanName, width * 0.5, nameBoxY + nameBoxH * 0.5);
+    ctx.shadowColor = 'transparent';
+
+    // 5. Bottom Subtitle / Score / Seat Ribbon
+    const bottomH = 64;
+    const bottomY = height - pad - 12 - bottomH;
+    ctx.beginPath();
+    ctx.roundRect(
+      pad + 16,
+      bottomY,
+      width - pad * 2 - 32,
+      bottomH,
+      14
+    );
+    ctx.fillStyle = 'rgba(2, 6, 23, 0.90)';
     ctx.fill();
 
     ctx.lineWidth = 2;
@@ -1228,7 +1286,7 @@ export class SpectatorCrowd {
     ctx.stroke();
 
     ctx.fillStyle = borderColor;
-    ctx.font = 'bold 28px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.font = 'bold 26px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(bottomSubtitle, width * 0.5, bottomY + bottomH * 0.5);
@@ -1287,7 +1345,7 @@ export class SpectatorCrowd {
 
     const sprite = new THREE.Sprite(spriteMat);
     // Sleek and compact to prevent screen occlusion
-    sprite.scale.set(0.95, 0.25, 1.0);
+    sprite.scale.set(0.48, 0.13, 1.0);
     sprite.userData = { canvas, ctx, texture, isFemale };
     return sprite;
   }
@@ -1323,24 +1381,26 @@ export class SpectatorCrowd {
     ctx.clearRect(0, 0, width, height);
 
     if (isCelebrating) {
-      ctx.fillStyle = 'rgba(245, 158, 11, 0.92)';
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.88)';
       ctx.strokeStyle = '#fde047';
+      ctx.lineWidth = 2;
     } else if (isFemale) {
-      ctx.fillStyle = 'rgba(28, 15, 24, 0.88)';
-      ctx.strokeStyle = '#f472b6';
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+      ctx.strokeStyle = 'rgba(244, 114, 182, 0.45)';
+      ctx.lineWidth = 1.2;
     } else {
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-      ctx.strokeStyle = '#38bdf8';
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.75)';
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.45)';
+      ctx.lineWidth = 1.2;
     }
-    ctx.lineWidth = 3;
 
     ctx.beginPath();
     ctx.roundRect(10, 10, width - 20, height - 20, 24);
     ctx.fill();
     ctx.stroke();
 
-    ctx.fillStyle = isCelebrating ? '#000000' : '#ffffff';
-    ctx.font = 'bold 34px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    ctx.fillStyle = isCelebrating ? '#000000' : '#f8fafc';
+    ctx.font = '500 26px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(text, width * 0.5, height * 0.5);
@@ -1531,8 +1591,8 @@ export class SpectatorCrowd {
     });
 
     const sprite = new THREE.Sprite(spriteMat);
-    // Well-proportioned VIP badge that stays in foreground without overlapping or blocking fireworks
-    sprite.scale.set(1.15, 0.40, 1.0);
+    // Well-proportioned VIP badge that stays compact and unobtrusive
+    sprite.scale.set(0.58, 0.18, 1.0);
     sprite.userData = {
       canvas,
       ctx,
@@ -1844,9 +1904,12 @@ export class SpectatorCrowd {
       char.rightArmGroup.rotation.set(0, 0, 0);
     }
 
-    const sideX = char.tagSideOffset !== undefined ? char.tagSideOffset : 0.72;
-    char.nameTag.position.set(sideX, char.isHonorary ? 1.72 : 1.68, 0);
-    char.nameTag.scale.set(char.isHonorary ? 0.95 : 0.85, char.isHonorary ? 0.35 : 0.24, 1.0);
+    char.nameTag.position.set(0, char.isHonorary ? 2.02 : 1.98, 0);
+    char.nameTag.scale.set(
+      char.isHonorary ? 0.58 : 0.48,
+      char.isHonorary ? 0.18 : 0.13,
+      1.0
+    );
     char.speechBubble.position.set(0, 3.25, 0);
     char.group.position.y = char.baseY;
   }
@@ -1859,8 +1922,6 @@ export class SpectatorCrowd {
     const legSpacing = isFemale ? 0.11 : 0.15;
     char.state = 'sitting';
     char.stateTimer = 999999;
-
-    const sideX = char.tagSideOffset !== undefined ? char.tagSideOffset : 0.72;
 
     if (char.isHonorary) {
       // Seated on luxury VIP beach floor cushion at front-row picnic
@@ -1881,9 +1942,9 @@ export class SpectatorCrowd {
       char.leftArmGroup.rotation.set(-0.35, 0.10, 0);
       char.rightArmGroup.rotation.set(-0.35, -0.10, 0);
 
-      // Name badge positioned beside the head at eye level (leaving sky 100% clear)
-      char.nameTag.position.set(sideX, 1.15, 0);
-      char.nameTag.scale.set(0.95, 0.35, 1.0);
+      // Compact name badge positioned neatly centered above head
+      char.nameTag.position.set(0, 1.36, 0);
+      char.nameTag.scale.set(0.58, 0.18, 1.0);
       char.speechBubble.position.set(0, 2.30, 0);
     } else {
       // Seated casually on coastal Hanabi leisure sheets & sand mats
@@ -1908,9 +1969,9 @@ export class SpectatorCrowd {
         char.rightArmGroup.rotation.set(-0.25, 0, 0);
       }
 
-      // Name badge positioned beside the head at eye level
-      char.nameTag.position.set(sideX, 1.10, 0);
-      char.nameTag.scale.set(0.85, 0.24, 1.0);
+      // Compact name badge positioned neatly centered above head
+      char.nameTag.position.set(0, 1.32, 0);
+      char.nameTag.scale.set(0.48, 0.13, 1.0);
       char.speechBubble.position.set(0, 2.20, 0);
     }
   }
@@ -2007,7 +2068,9 @@ export class SpectatorCrowd {
       if (!char.isHonorary && char.nameTagTimer > 0) {
         char.nameTagTimer -= deltaTime;
         if (char.nameTagTimer <= 0 && char.nameTag) {
-          char.nameTag.visible = false;
+          if (this.focusedSpectator !== char) {
+            char.nameTag.visible = false;
+          }
         }
       }
 

@@ -158,14 +158,14 @@ describe('ViewingDeck and SpectatorCrowd', () => {
 
     crowd.setThirdPersonFocus(targetChar);
 
-    expect(targetChar.group.visible).toBe(true);
+    expect(targetChar.group.visible).toBe(false);
     expect(targetChar.nameTag.visible).toBe(false);
     expect(targetChar.speechBubble.visible).toBe(false);
 
-    // Other characters should be hidden so they do not block the view of fireworks
+    // Other characters should remain visible but made translucent (mờ đi) with hidden tags
     for (const char of crowd.characters) {
       if (char !== targetChar) {
-        expect(char.group.visible).toBe(false);
+        expect(char.group.visible).toBe(true);
         expect(char.nameTag.visible).toBe(false);
       }
     }

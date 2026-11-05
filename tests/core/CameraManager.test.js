@@ -224,8 +224,8 @@ describe('CameraManager', () => {
     // Complete entrance to holding phase
     cameraManager.update(0.7);
     expect(cameraManager.thirdPersonState.phase).toBe('holding');
-    // Position should be behind spectator (Z around 401.0 + 2.2 = 403.2)
-    expect(cameraManager.instance.position.z).toBeCloseTo(403.2, 0);
+    // Position should be at spectator vantage point (Z around 401.0 + 0.5 = 401.5)
+    expect(cameraManager.instance.position.z).toBeCloseTo(401.5, 0);
     expect(cameraManager.instance.position.x).toBeLessThan(0);
 
     // Holding for duration

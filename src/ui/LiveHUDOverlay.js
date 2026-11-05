@@ -35,6 +35,26 @@ export class LiveHUDOverlay {
       this.eventBus.on('sequence:ended', () => {
         this.hideGiftSpotlight();
       });
+      this.eventBus.on('camera:third_person_focus', (detail) => {
+        if (detail?.active && detail.character) {
+          this.showSpectatorBadge(detail.character.name);
+        } else {
+          this.hideSpectatorBadge();
+        }
+      });
+      this.eventBus.on('camera:spectator_tour_started', (detail) => {
+        if (detail?.character) {
+          this.showSpectatorBadge(detail.character.name);
+        }
+      });
+      this.eventBus.on('camera:spectator_tour_advanced', (detail) => {
+        if (detail?.character) {
+          this.showSpectatorBadge(detail.character.name);
+        }
+      });
+      this.eventBus.on('camera:spectator_tour_ended', () => {
+        this.hideSpectatorBadge();
+      });
     }
   }
 
@@ -128,6 +148,33 @@ export class LiveHUDOverlay {
     this.spotlightBanner.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
     this.spotlightBanner.style.zIndex = '10000';
     this.container.appendChild(this.spotlightBanner);
+
+    // Spectator View Focus Badge (positioned at lower center during spectator focus / tour)
+    this.spectatorBadge = document.createElement('div');
+    this.spectatorBadge.id = 'spectator-focus-badge';
+    this.spectatorBadge.style.position = 'absolute';
+    this.spectatorBadge.style.bottom = '28px';
+    this.spectatorBadge.style.left = '50%';
+    this.spectatorBadge.style.transform = 'translateX(-50%) translateY(12px)';
+    this.spectatorBadge.style.display = 'flex';
+    this.spectatorBadge.style.alignItems = 'center';
+    this.spectatorBadge.style.gap = '8px';
+    this.spectatorBadge.style.padding = '8px 24px';
+    this.spectatorBadge.style.borderRadius = '20px';
+    this.spectatorBadge.style.background = 'rgba(15, 23, 42, 0.88)';
+    this.spectatorBadge.style.backdropFilter = 'blur(10px)';
+    this.spectatorBadge.style.border = '1px solid rgba(56, 189, 248, 0.6)';
+    this.spectatorBadge.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.5), 0 0 16px rgba(56, 189, 248, 0.25)';
+    this.spectatorBadge.style.color = '#f8fafc';
+    this.spectatorBadge.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    this.spectatorBadge.style.fontSize = '14px';
+    this.spectatorBadge.style.fontWeight = '600';
+    this.spectatorBadge.style.letterSpacing = '0.5px';
+    this.spectatorBadge.style.opacity = '0';
+    this.spectatorBadge.style.pointerEvents = 'none';
+    this.spectatorBadge.style.transition = 'all 0.35s cubic-bezier(0.16, 1, 0.3, 1)';
+    this.spectatorBadge.style.zIndex = '9000';
+    this.container.appendChild(this.spectatorBadge);
 
     // Quick Test Toolbar for streamer (bottom center, hidden by default, toggled via Hotkey or Pill)
     this.createTestToolbar();
@@ -351,6 +398,9 @@ export class LiveHUDOverlay {
     if (!this.testToolbar) return;
     const isHidden = this.testToolbar.style.display === 'none';
     this.testToolbar.style.display = isHidden ? 'flex' : 'none';
+    if (this.spectatorBadge) {
+      this.spectatorBadge.style.bottom = isHidden ? '130px' : '28px';
+    }
   }
 
   toggleCleanFeed() {
@@ -686,6 +736,19 @@ export class LiveHUDOverlay {
     if (!this.spotlightBanner) return;
     this.spotlightBanner.style.opacity = '0';
     this.spotlightBanner.style.transform = 'translateX(-50%) translateY(-20px)';
+  }
+
+  showSpectatorBadge(name) {
+    if (!this.spectatorBadge) return;
+    this.spectatorBadge.innerText = 'Spectator: ' + (name || 'Viewer');
+    this.spectatorBadge.style.opacity = '1';
+    this.spectatorBadge.style.transform = 'translateX(-50%) translateY(0)';
+  }
+
+  hideSpectatorBadge() {
+    if (!this.spectatorBadge) return;
+    this.spectatorBadge.style.opacity = '0';
+    this.spectatorBadge.style.transform = 'translateX(-50%) translateY(12px)';
   }
 
   simulateChat(comment) {
