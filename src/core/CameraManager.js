@@ -57,11 +57,34 @@ export class CameraManager {
     // Multi-spectator tour state during sequence playback (5s per spectator)
     this.spectatorTourState = null;
 
+    // Aerial Top-Down perspective looking down on fireworks from overhead
+    this.aerialTopDownState = null;
+    this.aerialTopDownNormalChance = 0.30; // 30% random chance during normal ambient/single launches
+    this.aerialTopDownSequenceChance = 0.05; // 5% random chance during sequence shows
+    this.isSequenceActive = false;
+    this.sequenceAllowsAerialTopDown = false;
+    this.sequenceAerialTriggered = false;
+    this.lastAerialTopDownTime = -999999;
+
     this.eventSubscriptions = [];
     if (this.eventBus && typeof this.eventBus.on === 'function') {
       this.eventSubscriptions.push(
         this.eventBus.on('firework:burst', (detail) => {
           this.onBurst(detail);
+        })
+      );
+      this.eventSubscriptions.push(
+        this.eventBus.on('firework:launch', (detail) => {
+          this.onLaunch(detail);
+        })
+      );
+      this.eventSubscriptions.push(
+        this.eventBus.on('camera:focus_top_down', (detail) => {
+          this.focusAerialTopDownOnLaunch(
+            detail?.position,
+            detail?.velocity,
+            detail?.duration || 5.5
+          );
         })
       );
       this.eventSubscriptions.push(
@@ -76,6 +99,9 @@ export class CameraManager {
       );
       this.eventSubscriptions.push(
         this.eventBus.on('sequence:started', (detail) => {
+          this.isSequenceActive = true;
+          this.sequenceAllowsAerialTopDown = Math.random() < this.aerialTopDownSequenceChance;
+          this.sequenceAerialTriggered = false;
           const crowd = this.sceneManager?.spectatorCrowd;
           if (crowd && typeof crowd.getTourCandidates === 'function') {
             const sponsorId =
@@ -92,6 +118,9 @@ export class CameraManager {
       );
       this.eventSubscriptions.push(
         this.eventBus.on('sequence:ended', () => {
+          this.isSequenceActive = false;
+          this.sequenceAllowsAerialTopDown = false;
+          this.sequenceAerialTriggered = false;
           if (this.spectatorTourState) {
             this.stopSpectatorTour();
           }
@@ -347,8 +376,12 @@ export class CameraManager {
     }
 
     // Heavy bursts (shell size >= 3" or finale) impart noticeable acoustic thump
-    const addedTrauma = Math.pow(rawIntensity, 1.3) * 0.38 * distanceFactor;
-    this.trauma = Math.min(0.70, this.trauma + addedTrauma);
+    let addedTrauma = Math.pow(rawIntensity, 1.3) * 0.38 * distanceFactor;
+    if (this.aerialTopDownState && this.aerialTopDownState.phase === 'holding') {
+      // Dramatic aerial shockwave when fireworks burst on stage
+      addedTrauma *= 1.25;
+    }
+    this.trauma = Math.min(0.75, this.trauma + addedTrauma);
   }
 
   addImpulse(intensity = 0.4) {
@@ -805,12 +838,267 @@ export class CameraManager {
     }
   }
 
+  get aerialTopDownChance() {
+    return this.isSequenceActive
+      ? this.aerialTopDownSequenceChance
+      : this.aerialTopDownNormalChance;
+  }
+
+  set aerialTopDownChance(value) {
+    this.aerialTopDownNormalChance = value;
+    this.aerialTopDownSequenceChance = value;
+    if (this.isSequenceActive) {
+      this.sequenceAllowsAerialTopDown = Math.random() < value;
+    }
+  }
+
+  onLaunch(detail) {
+    if (!this.enabled || !detail || !detail.position) {
+      return;
+    }
+
+    // Do not interrupt focused third-person VIP view or active aerial hold
+    if (
+      this.thirdPersonState ||
+      this.aerialTopDownState
+    ) {
+      return;
+    }
+
+    const now = typeof performance !== 'undefined'
+      ? performance.now()
+      : Date.now();
+
+    // In sequence mode: ensure 95% of sequences stay entirely on spectator tour,
+    // and only qualifying 5% trigger an aerial view at most once during the show
+    if (this.isSequenceActive) {
+      if (!this.sequenceAllowsAerialTopDown || this.sequenceAerialTriggered) {
+        return;
+      }
+      this.sequenceAerialTriggered = true;
+      this.lastAerialTopDownTime = now;
+      this.focusAerialTopDownOnLaunch(
+        detail.position,
+        detail.velocity,
+        5.5
+      );
+      return;
+    }
+
+    // Normal mode (single launches / ambient firing): 30% chance with 8-second cooldown
+    if (now - this.lastAerialTopDownTime < 8000) {
+      return;
+    }
+
+    if (Math.random() > this.aerialTopDownNormalChance) {
+      return;
+    }
+
+    this.lastAerialTopDownTime = now;
+    this.focusAerialTopDownOnLaunch(
+      detail.position,
+      detail.velocity,
+      5.5
+    );
+  }
+
+  focusAerialTopDownOnLaunch(launchPos, launchVel, duration = 6.0) {
+    if (this.thirdPersonState) {
+      this.cancelThirdPersonView();
+    }
+
+    // Target elevated on the fireworks arena to capture full height range up to 400m
+    const vantageTarget = new THREE.Vector3(0.0, 145.0, 60.0);
+
+    // Bird flyover trajectory: elevated high (Y ~ 240-255m) and set back (Z ~ 380-405m)
+    // to give an expansive panoramic view encompassing high-altitude fireworks up to 400m
+    const flyDir = Math.random() < 0.5 ? 1 : -1;
+    const startVantage = new THREE.Vector3(
+      -115.0 * flyDir,
+      255.0,
+      405.0
+    );
+    const endVantage = new THREE.Vector3(
+      115.0 * flyDir,
+      235.0,
+      380.0
+    );
+
+    let homePos;
+    let homeTarget;
+    if (
+      this.spectatorTourState &&
+      this.spectatorTourState.candidates &&
+      this.spectatorTourState.candidates.length > 0
+    ) {
+      const currentChar = this.spectatorTourState.candidates[this.spectatorTourState.currentIndex];
+      const vantagePos = new THREE.Vector3();
+      const vantageTar = new THREE.Vector3();
+      this._computeVantageForCharacter(
+        currentChar,
+        vantagePos,
+        vantageTar
+      );
+      homePos = vantagePos;
+      homeTarget = vantageTar;
+    } else if (this.isBroadcastLocked && this.broadcastPosition) {
+      homePos = this.broadcastPosition.clone();
+      homeTarget = this.broadcastTarget.clone();
+    } else {
+      homePos = this.savedFreePosition.clone();
+      homeTarget = this.stageTarget.clone();
+    }
+
+    const startPos = this.instance.position.clone();
+    const currentDirection = new THREE.Vector3();
+    this.instance.getWorldDirection(currentDirection);
+    const startTarget = this.instance.position.clone().add(
+      currentDirection.multiplyScalar(200)
+    );
+
+    if (this.eventBus && typeof this.eventBus.emit === 'function') {
+      this.eventBus.emit('camera:top_down_focus', {
+        position: startVantage,
+        active: true
+      });
+    }
+
+    this.aerialTopDownState = {
+      phase: 'entering',
+      elapsed: 0,
+      transitionDuration: 0.85,
+      holdDuration: Math.max(2.0, duration),
+      returnDuration: 1.3,
+      startPos,
+      startTarget,
+      startVantage,
+      endVantage,
+      vantageTarget,
+      homePos,
+      homeTarget
+    };
+  }
+
+  cancelAerialTopDownView() {
+    if (!this.aerialTopDownState) {
+      return;
+    }
+    if (this.eventBus && typeof this.eventBus.emit === 'function') {
+      this.eventBus.emit('camera:top_down_focus', {
+        active: false
+      });
+    }
+    this.aerialTopDownState = null;
+    if (
+      this.isBroadcastLocked &&
+      this.broadcastPosition &&
+      this.broadcastTarget
+    ) {
+      this.instance.position.copy(this.broadcastPosition);
+      this.instance.lookAt(this.broadcastTarget);
+    }
+  }
+
+  updateAerialTopDownView(deltaTime) {
+    if (!this.aerialTopDownState) {
+      return;
+    }
+
+    const state = this.aerialTopDownState;
+    state.elapsed += deltaTime;
+
+    if (state.phase === 'entering') {
+      const progress = Math.min(
+        1.0,
+        state.elapsed / state.transitionDuration
+      );
+      // Fast dynamic cubic ease-out into soaring bird flight path
+      const ease = 1.0 - Math.pow(1.0 - progress, 3);
+
+      this.instance.position.copy(state.startPos).lerp(
+        state.startVantage,
+        ease
+      );
+      const lookTarget = state.startTarget.clone().lerp(
+        state.vantageTarget,
+        ease
+      );
+      this.instance.lookAt(lookTarget);
+
+      if (progress >= 1.0) {
+        state.phase = 'holding';
+        state.elapsed = 0;
+      }
+    } else if (state.phase === 'holding') {
+      // Bird soaring flight: glides smoothly across the sky while looking down at stage
+      const flightProgress = Math.min(
+        1.0,
+        state.elapsed / state.holdDuration
+      );
+      const currentPos = state.startVantage.clone().lerp(
+        state.endVantage,
+        flightProgress
+      );
+      // Gentle natural aerodynamic lift wave
+      currentPos.y += Math.sin(flightProgress * Math.PI) * 6.0;
+
+      this.instance.position.copy(currentPos);
+      // Always fixed gazing at the fireworks stage below
+      this.instance.lookAt(state.vantageTarget);
+
+      if (state.elapsed >= state.holdDuration) {
+        state.phase = 'returning';
+        state.elapsed = 0;
+        state.startPos.copy(this.instance.position);
+        state.startTarget.copy(state.vantageTarget);
+      }
+    } else if (state.phase === 'returning') {
+      const progress = Math.min(
+        1.0,
+        state.elapsed / state.returnDuration
+      );
+      const ease = progress * progress * (3.0 - 2.0 * progress);
+
+      this.instance.position.copy(state.startPos).lerp(
+        state.homePos,
+        ease
+      );
+      const lookTarget = state.startTarget.clone().lerp(
+        state.homeTarget,
+        ease
+      );
+      this.instance.lookAt(lookTarget);
+
+      if (progress >= 1.0) {
+        if (this.eventBus && typeof this.eventBus.emit === 'function') {
+          this.eventBus.emit('camera:top_down_focus', {
+            active: false
+          });
+        }
+        this.aerialTopDownState = null;
+        if (this.spectatorTourState) {
+          this.spectatorTourState.elapsed = 0;
+          this.spectatorTourState.phase = 'holding';
+        } else if (
+          this.isBroadcastLocked &&
+          this.broadcastPosition &&
+          this.broadcastTarget
+        ) {
+          this.instance.position.copy(this.broadcastPosition);
+          this.instance.lookAt(this.broadcastTarget);
+        }
+      }
+    }
+  }
+
   update(deltaTime) {
-    // 0. Spectator Tour or Third-Person Spectator Vantage Mode or Fixed Broadcast Tripod Framing
+    // 0. Spectator Tour or Third-Person Spectator Vantage Mode or Aerial Top-Down Mode
     if (this.spectatorTourState) {
       this.updateSpectatorTour(deltaTime);
     } else if (this.thirdPersonState) {
       this.updateThirdPersonView(deltaTime);
+    } else if (this.aerialTopDownState) {
+      this.updateAerialTopDownView(deltaTime);
     } else if (this.isBroadcastLocked && this.broadcastPosition && this.broadcastTarget) {
       this.instance.position.copy(this.broadcastPosition);
       this.instance.lookAt(this.broadcastTarget);
@@ -926,6 +1214,10 @@ export class CameraManager {
   }
 
   destroy() {
+    this.sequenceAllowsAerialTopDown = false;
+    this.sequenceAerialTriggered = false;
+    this.isSequenceActive = false;
+    this.cancelAerialTopDownView();
     this.cancelSpectatorTour();
     this.cancelThirdPersonView();
     for (const unsubscribe of this.eventSubscriptions) {

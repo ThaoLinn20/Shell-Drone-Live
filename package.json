@@ -70,6 +70,7 @@
     "wait-on": "^9.0.10"
   },
   "dependencies": {
+    "@shell-drone/firework-engine": "github:ThaoLinn20/firework-engine",
     "three": "^0.183.2",
     "tiktok-live-connector": "^2.5.0",
     "ws": "^8.22.1"

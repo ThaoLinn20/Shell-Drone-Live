@@ -350,4 +350,90 @@ describe('CameraManager', () => {
     cameraManager.cancelSpectatorTour();
     expect(cameraManager.spectatorTourState).toBeNull();
   });
+
+  it('should adjust aerial top-down chance between normal (30%) and sequence (5%)', () => {
+    expect(cameraManager.isSequenceActive).toBe(false);
+    expect(cameraManager.aerialTopDownChance).toBeCloseTo(0.30, 2);
+
+    eventBus.emit('sequence:started', { index: 0 });
+    expect(cameraManager.isSequenceActive).toBe(true);
+    expect(cameraManager.aerialTopDownChance).toBeCloseTo(0.05, 2);
+
+    eventBus.emit('sequence:ended');
+    expect(cameraManager.isSequenceActive).toBe(false);
+    expect(cameraManager.aerialTopDownChance).toBeCloseTo(0.30, 2);
+  });
+
+  it('should preserve spectator tour during sequence when aerial top-down is not allowed', () => {
+    cameraManager.spectatorTourState = {
+      candidates: [{ name: 'Viewer1' }, { name: 'Viewer2' }],
+      currentIndex: 0,
+      phase: 'holding',
+      elapsed: 1.0,
+      holdDuration: 5.0
+    };
+    cameraManager.isSequenceActive = true;
+    cameraManager.sequenceAllowsAerialTopDown = false;
+
+    eventBus.emit('firework:launch', {
+      position: { x: 0, y: 0.5, z: 340 },
+      velocity: { x: 0, y: 90, z: 0 }
+    });
+
+    expect(cameraManager.aerialTopDownState).toBeNull();
+    expect(cameraManager.spectatorTourState).not.toBeNull();
+  });
+
+  it('should trigger aerial top-down vantage on firework:launch event when random probability passes', () => {
+    cameraManager.aerialTopDownChance = 1.0;
+    cameraManager.lastAerialTopDownTime = -999999;
+
+    eventBus.emit('firework:launch', {
+      position: { x: -8.0, y: 0.5, z: 335.0 },
+      velocity: { x: 0, y: 88.0, z: 0 }
+    });
+
+    expect(cameraManager.aerialTopDownState).not.toBeNull();
+    expect(cameraManager.aerialTopDownState.phase).toBe('entering');
+
+    cameraManager.cancelAerialTopDownView();
+    expect(cameraManager.aerialTopDownState).toBeNull();
+  });
+
+  it('should transition to aerial top-down vantage looking downward at burst and return cleanly', () => {
+    const launchPos = { x: 0.0, y: 0.5, z: 340.0 };
+    const launchVel = { x: 0.0, y: 95.0, z: -2.0 };
+
+    cameraManager.focusAerialTopDownOnLaunch(launchPos, launchVel, 5.0);
+    expect(cameraManager.aerialTopDownState).not.toBeNull();
+    expect(cameraManager.aerialTopDownState.phase).toBe('entering');
+
+    // Finish entering transition (0.85s)
+    cameraManager.update(0.85);
+    expect(cameraManager.aerialTopDownState.phase).toBe('holding');
+    // Camera is positioned high overhead (> 200m)
+    expect(cameraManager.instance.position.y).toBeGreaterThan(200.0);
+    // Look target is anchored high enough to cover up to 400m fireworks (Y ~ 145m)
+    expect(cameraManager.aerialTopDownState.vantageTarget.y).toBeCloseTo(145.0, 0);
+
+    // Hold for duration (5.0s)
+    cameraManager.update(5.1);
+    expect(cameraManager.aerialTopDownState.phase).toBe('returning');
+
+    // Finish return transition (1.3s)
+    cameraManager.update(1.3);
+    expect(cameraManager.aerialTopDownState).toBeNull();
+  });
+
+  it('should cancel aerial top-down view immediately when cancelAerialTopDownView is called', () => {
+    cameraManager.focusAerialTopDownOnLaunch(
+      { x: 0, y: 0.5, z: 340 },
+      { x: 0, y: 90, z: 0 },
+      5.0
+    );
+    expect(cameraManager.aerialTopDownState).not.toBeNull();
+
+    cameraManager.cancelAerialTopDownView();
+    expect(cameraManager.aerialTopDownState).toBeNull();
+  });
 });

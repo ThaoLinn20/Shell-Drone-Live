@@ -55,6 +55,13 @@ export class LiveHUDOverlay {
       this.eventBus.on('camera:spectator_tour_ended', () => {
         this.hideSpectatorBadge();
       });
+      this.eventBus.on('camera:top_down_focus', (detail) => {
+        if (detail?.active) {
+          this.showSpectatorBadge('Aerial Top-Down');
+        } else {
+          this.hideSpectatorBadge();
+        }
+      });
     }
   }
 
@@ -276,7 +283,8 @@ export class LiveHUDOverlay {
       { label: 'Chat: viet nam', action: () => this.simulateChat('viet nam') },
       { label: 'Chat !tim', action: () => this.simulateChat('!tim') },
       { label: 'Chat !phaohoa', action: () => this.simulateChat('!phaohoa') },
-      { label: 'Like (2-4 phao)', action: () => this.simulateLike() }
+      { label: 'Like (2-4 phao)', action: () => this.simulateLike() },
+      { label: 'Top-Down POV', action: () => this.simulateTopDownPOV() }
     ];
 
     for (const btn of testButtons) {
@@ -740,7 +748,13 @@ export class LiveHUDOverlay {
 
   showSpectatorBadge(name) {
     if (!this.spectatorBadge) return;
-    this.spectatorBadge.innerText = 'Spectator: ' + (name || 'Viewer');
+    const isSpecialPov = name && (
+      name.includes('Top-Down') ||
+      name.includes('Aerial')
+    );
+    this.spectatorBadge.innerText = isSpecialPov
+      ? 'POV: ' + name
+      : 'Spectator: ' + (name || 'Viewer');
     this.spectatorBadge.style.opacity = '1';
     this.spectatorBadge.style.transform = 'translateX(-50%) translateY(0)';
   }
@@ -767,6 +781,40 @@ export class LiveHUDOverlay {
       timestamp: Date.now()
     };
     this.interactionManager.handleIncomingEvent(evt);
+  }
+
+  simulateTopDownPOV() {
+    if (this.eventBus) {
+      const mockLaunchPos = {
+        x: (Math.random() - 0.5) * 35.0,
+        y: 0.5,
+        z: 325.0 + Math.random() * 20.0
+      };
+      const mockLaunchVel = {
+        x: (Math.random() - 0.5) * 4.0,
+        y: 95.0,
+        z: -2.0
+      };
+      this.eventBus.emit('camera:focus_top_down', {
+        position: mockLaunchPos,
+        velocity: mockLaunchVel,
+        duration: 5.5
+      });
+      if (this.interactionManager?.fireworkSystem) {
+        this.interactionManager.fireworkSystem.fire(
+          {
+            shapeType: 'chrysanthemum',
+            effectType: 'strobe',
+            color: '#38bdf8',
+            shellSize: 5.0
+          },
+          {
+            ratioX: 0.5,
+            ratioZ: 0.5
+          }
+        );
+      }
+    }
   }
 }
 
