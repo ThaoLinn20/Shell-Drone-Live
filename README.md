@@ -56,6 +56,29 @@ Then, access the local address displayed on the terminal (default is `http://loc
 
 ---
 
+## Shared Firework Engine System
+
+The pyrotechnic simulation, mathematics, shapes, dynamics, visual effects, and preset configurations are maintained centrally in the standalone repository **[@shell-drone/firework-engine](https://github.com/ThaoLinn20/firework-engine)**. This architecture ensures that different applications (such as this TikTok Live version and the Studio Editor) always share the exact same pyrotechnic physics and visual fidelity.
+
+### Updating to the Latest Fireworks
+Whenever new fireworks or performance improvements are published to the engine repository, you can update your local application to the latest version by running:
+`ash
+npm update @shell-drone/firework-engine
+`
+
+### Developing or Adding New Fireworks
+To create new firework shapes, dynamics, or presets:
+1. Open or clone ../firework-engine (https://github.com/ThaoLinn20/firework-engine).
+2. Implement your shapes, kinematics, or presets in src/factories/ following the Component-based Composition model.
+3. Run 
+pm test and 
+pm run build inside irework-engine to verify that all unit tests pass and bundles are compiled.
+4. Commit and push changes to main.
+5. Run 
+pm update @shell-drone/firework-engine in this project to immediately utilize the new fireworks.
+
+---
+
 ## Compilation and Packaging
 
 ### B. Package Desktop Application
