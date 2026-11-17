@@ -131,20 +131,21 @@ describe('Multi Nested Shell Stage Particle Multiplier', () => {
     expect(lowCount).toBeLessThan(baseCount);
     expect(highCount).toBeGreaterThan(baseCount);
 
-    // Clamping checks
-    const clampedBelow = system.resolveBurstParticleCount(
+    // Scaled proportional checks without artificial defensive clamping
+    const scaledBelow = system.resolveBurstParticleCount(
       'sphere',
       'standard',
       { particleCountMultiplier: 0.05, shellSize: 1.0 }
     );
-    expect(clampedBelow).toBe(lowCount);
+    expect(scaledBelow).toBeLessThan(lowCount);
+    expect(scaledBelow).toBeGreaterThanOrEqual(1);
 
-    const clampedAbove = system.resolveBurstParticleCount(
+    const scaledAbove = system.resolveBurstParticleCount(
       'sphere',
       'standard',
       { particleCountMultiplier: 10.0, shellSize: 1.0 }
     );
-    expect(clampedAbove).toBe(highCount);
+    expect(scaledAbove).toBeGreaterThan(highCount);
   });
 
   it('should forward stage particleCountMultiplier to each sub-burst in triggerMultiNestedBurst', () => {
